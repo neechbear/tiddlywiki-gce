@@ -1,0 +1,22 @@
+#cloud-config
+
+users:
+- name: tiddlywiki
+  uid: 2000
+
+write_files:
+- path: /etc/systemd/system/tiddlywiki.service
+  permissions: 0644
+  owner: root
+  content: |
+    [Unit]
+    Description=TiddlyWiki 5 server
+
+    [Service]
+    ExecStart=/usr/bin/docker run --rm -u 2000 -v /home/tiddlywiki:/var/lib/tiddlywiki -p 80:8080 --name=tiddlywiki nicolaw/tiddlywiki:latest
+    ExecStop=/usr/bin/docker stop tiddlywiki
+    ExecStopPost=/usr/bin/docker rm tiddlywiki
+
+runcmd:
+- systemctl daemon-reload
+- systemctl start tiddlywiki.service
