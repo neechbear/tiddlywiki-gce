@@ -1,0 +1,105 @@
+    #ServerAdmin webmaster@mydomain.com
+    #ServerName mydomain.com
+    #ServerAlias www.mydomain.com
+    UseCanonicalName On
+    DocumentRoot /usr/local/apache2/htdocs
+    
+    Options -Indexes +FollowSymLinks -MultiViews
+    
+    CheckSpelling On
+    
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/mydomain.com/cert.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/mydomain.com/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/mydomain.com/fullchain.pem
+    
+    #SSLCertificateFile /etc/ssl/certs/mydomain.com.crt
+    #SSLCertificateKeyFile /etc/ssl/private/mydomain.com.key
+    #SSLCertificateChainFile /etc/ssl/certs/mydomain.com.ca-bundle
+    #SSLOpenSSLConfCmd DHParameters "/etc/ssl/dhparams.pem"
+    
+    SSLCipherSuite AES128+EECDH:AES128+EDH
+    SSLProtocol All -SSLv2 -SSLv3
+    SSLHonorCipherOrder On
+    
+    # https://weakdh.org/sysadmin.html
+    # https://www.ssllabs.com/ssltest/analyze.html?d=domainname.fqdn
+    # http://serverfault.com/questions/693241/how-to-fix-logjam-vulnerability-in-apache-httpd
+    # https://o-o-s.de/debian-wheezy-apache-logjam/10492
+    # https://httpd.apache.org/docs/current/ssl/ssl_faq.html
+    #SSLProtocol All -SSLv2 -SSLv3
+    #SSLCipherSuite ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-DSS-AES128-SHA256:DHE-DSS-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!DHE-RSA-AES128-GCM-SHA256:!DHE-RSA-AES256-GCM-SHA384:!DHE-RSA-AES128-SHA256:!DHE-RSA-AES256-SHA:!DHE-RSA-AES128-SHA:!DHE-RSA-AES256-SHA256:!DHE-RSA-CAMELLIA128-SHA:!DHE-RSA-CAMELLIA256-SHA
+    #SSLHonorCipherOrder On
+    
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
+    Header always set X-Frame-Options SAMEORIGIN
+    Header always set X-Content-Type-Options nosniff
+    
+    # Requires Apache >= 2.4
+    #SSLCompression off 
+    #SSLUseStapling on 
+    #SSLStaplingCache "shmcb:logs/stapling-cache(150000)" 
+    
+    BrowserMatch "MSIE [2-6]" \
+    nokeepalive ssl-unclean-shutdown \
+    downgrade-1.0 force-response-1.0
+    BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+    
+    RewriteEngine On
+    
+    #Alias /static/favicon.ico /var/www/favicon.ico
+    #Alias /static/static.css /var/www/static.css
+    
+    Header merge Cache-Control no-cache
+    
+    <Proxy *>
+      Require all granted
+    </Proxy>
+    
+    # RewriteCond %{HTTP_USER_AGENT}  ^Lynx/.*         [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^ELinks/.*       [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^Links.*         [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^w3m/.*          [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^curl/.*         [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^Wget/.*         [OR]
+    # RewriteCond %{HTTP_USER_AGENT}  ^lwp-request/.*
+    # RewriteCond %{REQUEST_URI}      ^/(status$|bags/.*|recipes/.*)?$
+    # RewriteRule .*                  /hello [R,L]
+    #	RewriteCond /static%{LA-F:REQUEST_URI}.html -F
+    
+    RewriteCond %{REQUEST_FILENAME} !-F
+    RewriteCond %{REQUEST_URI} ^/[^/]+.html$
+    RewriteCond %{REQUEST_URI} !^/(status$|bags/|recipes/|static[/\.]|s/|favicon\.ico$)
+    RewriteRule ^/(.+)$ /static/$1
+    
+    RewriteCond %{REQUEST_FILENAME} !-F
+    RewriteCond %{REQUEST_URI} !^/[^/]+\.html$
+    RewriteCond %{REQUEST_URI} !^/(status$|bags/|recipes/|static[/\.]|s/|favicon\.ico$)
+    RewriteRule ^/(.+)$ /static/$1.html
+    
+    RewriteCond %{REQUEST_FILENAME} !-F
+    RewriteCond %{REQUEST_URI} !^/static/static\.css$
+    RewriteRule /static.css /static/static.css
+    
+    ProxyPreserveHost Off
+    ProxyPass /static !
+    ProxyPass /static.css !
+    ProxyPass /favicon.ico !
+    ProxyPass /s !
+    ProxyPass /sitemap.xml !
+    ProxyPass /ror.xml !
+    ProxyPass / http://127.0.0.1:8080/
+    AllowEncodedSlashes on
+    
+    #ErrorDocument 400 /400_Bad_Request.html
+    ErrorDocument 401 /401_Unauthorized.html
+    ErrorDocument 403 /403_Forbidden.html
+    ErrorDocument 404 /404_Not_Found.html
+    
+    #ErrorDocument 500 /500_Internal_Server_Error.html
+    #ErrorDocument 502 /502_Bad_Gateway.html
+    ErrorDocument 503 /503_Service_Unavailable.html
+    #ErrorDocument 504 /504_Gateway_Timeout.html
+    
+    #ErrorLog ${APACHE_LOG_DIR}/error.log
+    #CustomLog ${APACHE_LOG_DIR}/access.log combined
