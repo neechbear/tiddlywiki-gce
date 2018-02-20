@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+set -e
+
+#env
+
+TWBASE="/var/lib/tiddlywiki"
+LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
+
+cd "$TWBASE"
+
+# Initialise the Git repository against the remote origin.
+if [ ! -d "$TWBASE/.git" ] ; then
+  git init
+fi
+
+# Launch cron daemon to schedule Git uploads and static website generation.
+exec crond -l 6 -d 6 -f

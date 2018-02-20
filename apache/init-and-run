@@ -1,0 +1,24 @@
+#!/bin/sh
+
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+set -e
+
+#env
+
+if ! grep -qE '^[^:]:.+' /usr/local/apache2/conf/tiddlywiki.passwd 2> /dev/null \
+    && [ -n "$TW_USERNAME" ] && [ "$TW_PASSWORD" ] ; then
+  htpasswd -c -b -B \
+    /usr/local/apache2/conf/tiddlywiki.passwd \
+    "$TW_USERNAME" \
+    "$TW_PASSWORD"
+fi
+
+while [ ! -e /etc/letsencrypt/live/$DOMAIN/cert.pem ]
+do
+  echo "Waiting for SSL certificate to be generated ..."
+  sleep 1
+done
+
+exec httpd -D FOREGROUND

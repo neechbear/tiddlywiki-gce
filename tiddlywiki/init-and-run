@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+set -e
+
+_twHOME="/var/lib/tiddlywiki"
+_twPATCH="/usr/local/src/syncer.patch"
+_twSYNCERSRC="/usr/local/lib/node_modules/tiddlywiki/core/modules/syncer.js"
+_twSYNCERDST="$_twHOME/mywiki/tiddlers/\$__core_modules_syncer.js"
+
+if [ ! -d "$_twHOME/mywiki" ] ; then
+  tiddlywiki mywiki --init server
+fi
+
+if [ ! -e "$_twSYNCERDST" ] ; then
+  if [ ! -d "$_twHOME/mywiki/tiddlers" ] ; then
+    mkdir -p "$_twHOME/mywiki/tiddlers"
+  fi
+  cp "$_twSYNCERSRC" "$_twSYNCERDST"
+  patch "$_twSYNCERDST" "$_twPATCH"
+fi
+
+if [ -z "$TW_PORT" ] ; then
+  TW_PORT="8080"
+fi
+
+if [ -z "$TW_HOST" ] ; then
+  TW_HOST="0.0.0.0"
+fi
+
+#env
+
+exec tiddlywiki mywiki --server "$TW_PORT" \
+  "$TW_ROOTTIDDLER" "$TW_RENDERTYPE" "$TW_SERVETYPE" \
+  "$TW_USERNAME" "$TW_PASSWORD" "$TW_HOST" "$TW_PATHPREFIX"

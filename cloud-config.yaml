@@ -1,4 +1,16 @@
+---
 #cloud-config
+
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+#
+#
+# This is far from anything like what is required at the moment.
+# Just try testing with docker-compose for the moment. This is
+# still blah.
+#
+#
 
 users:
 - name: tiddlywiki
@@ -13,7 +25,7 @@ write_files:
     Description=TiddlyWiki 5 server
 
     [Service]
-    ExecStart=/usr/bin/docker run --rm -u 2000 -v /home/tiddlywiki:/var/lib/tiddlywiki -p 80:8080 --name=tiddlywiki nicolaw/tiddlywiki:latest
+    ExecStart=/usr/bin/docker run --rm -u 2000 -v /home/tiddlywiki:/var/lib/tiddlywiki -p 8080:8080 --name=tiddlywiki nicolaw/tiddlywiki:latest
     ExecStop=/usr/bin/docker stop tiddlywiki
     ExecStopPost=/usr/bin/docker rm tiddlywiki
 

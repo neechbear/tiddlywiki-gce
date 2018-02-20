@@ -1,0 +1,86 @@
+---
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+# https://docs.docker.com/compose/compose-file
+
+version: "3.4"
+
+services:
+  automation:
+    build:
+      context: automation
+    environment:
+      EMAIL: "${EMAIL:-webmaster@localhost.localdomain}"
+      DOMAIN: "${DOMAIN:-localhost.localdomain}"
+    depends_on:
+      - tiddlywiki
+    volumes:
+      - /home/tiddlywiki:/var/lib/tiddlywiki
+      - /etc/letsencrypt:/etc/letsencrypt
+
+  letsencrypt:
+    build:
+      context: letsencrypt
+    environment:
+      EMAIL: "${EMAIL:-webmaster@localhost.localdomain}"
+      DOMAIN: "${DOMAIN:-localhost.localdomain}"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /home/tiddlywiki/htdocs/.well-known:/usr/local/apache2/htdocs/.well-known
+    healthcheck:
+      test: ["CMD", "ls", "-l", "/etc/letsencrypt/live/${DOMAIN:-localhost.localdomain}/*.pem"]
+      interval: 5m
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+  tiddlywiki:
+    build:
+      context: tiddlywiki
+    environment:
+      TW_PORT: "${TW_PORT:-8080}"
+      TW_ROOTTIDDLER: "${TW_ROOTTIDDLER:-$:/core/save/all}"
+      TW_RENDERTYPE: "${TW_RENDERTYPE:-text/plain}"
+      TW_SERVETYPE: "${TW_SERVERTYPE:-text/html}"
+      TW_USERNAME: "${TW_USERNAME:-$USER}"
+      #TW_PASSWORD: "${TW_PASSWORD:-}"
+      TW_HOST: "${TW_HOST:-}"
+      TW_PATHPREFIX: "${TW_PATHPREFIX:-}"
+    expose:
+      - 8080
+    volumes:
+      - /home/tiddlywiki:/var/lib/tiddlywiki
+    healthcheck:
+      test: ["CMD-SHELL", "printf 'GET /status HTTP/1.0\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 8080 | grep -wq tiddlywiki_version"]
+      interval: 1m
+      timeout: 2s
+      retries: 3
+      start_period: 10s
+
+  apache:
+    build:
+      context: apache
+    environment:
+      EMAIL: "${EMAIL:-webmaster@localhost.localdomain}"
+      DOMAIN: "${DOMAIN:-localhost.localdomain}"
+      TW_USERNAME: "${TW_USERNAME:-$USER}"
+      TW_PASSWORD: "${TW_PASSWORD:-password}"
+    depends_on:
+      - tiddlywiki
+      - letsencrypt
+    links:
+      - tiddlywiki:8080
+    ports:
+      - 80:80
+      - 443:443
+      - 444:444
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /home/tiddlywiki/htdocs:/usr/local/apache2/htdocs
+    healthcheck:
+      test: ["CMD-SHELL", "printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 80 | grep -wqF 'Location: https://dinglebop.codm/'"]
+      interval: 1m
+      timeout: 2s
+      retries: 3
+      start_period: 10s

@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
+# SSLCertificateFile /etc/letsencrypt/live/${DOMAIN}/cert.pem
+# SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
+# SSLCertificateChainFile /etc/letsencrypt/live/${DOMAIN}/fullchain.pem
+
+set -e
+
+#env
+
+LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
+
+if [ ! -d "$LIVEPATH" ] ; then
+  mkdir -p "$LIVEPATH"
+fi
+
+# Generate a self-signed certificate until LetsEncrypt does it's thing.
+if   [ ! -e "$LIVEPATH/cert.pem" ] \
+  || [ ! -e "$LIVEPATH/privkey.pem" ] \
+  || [ ! -e "$LIVEPATH/fullchain.pem" ] ; then
+  openssl req \
+    -subj "/CN=$DOMAIN/O=$DOMAIN/OU=$DOMAIN/L=Location/ST=State/C=GB" \
+    -new -newkey rsa:4096 -days 1180 -nodes -x509 \
+    -keyout "$LIVEPATH/privkey.pem" \
+    -out "$LIVEPATH/cert.pem"
+  cp "$LIVEPATH/cert.pem" "$LIVEPATH/fullchain.pem"
+  #openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
+fi
+
+# Generate initial LetsEncrypt certificate.
+if true ; then
+  echo "Generate LetsEncrypt certificate here."
+fi
+
+# Launch cron daemon for LetsEncrypt to periodically refresh our certificate.
+exec crond -l 6 -d 6 -f

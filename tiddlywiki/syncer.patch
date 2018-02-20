@@ -1,0 +1,11 @@
+--- /usr/local/lib/node_modules/tiddlywiki/core/modules/syncer.js
++++ /var/lib/tiddlywiki/mywiki/tiddlers/$__core_modules_syncer.js
+@@ -430,7 +430,7 @@
+ 			// Dispatch the task
+ 			this.dispatchTask(task,function(err) {
+ 				if(err) {
+-					self.logger.alert("Sync error while processing '" + task.title + "':\n" + err);
++					//self.logger.alert("Sync error while processing '" + task.title + "':\n" + err);
+ 				}
+ 				// Mark that this task is no longer in progress
+ 				delete self.taskInProgress[task.title];

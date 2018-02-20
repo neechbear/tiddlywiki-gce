@@ -1,12 +1,10 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-FROM httpd:2.4-alpine
-ADD httpd.conf /usr/local/apache2/conf/httpd.conf
-ADD tiddlywiki.conf /usr/local/apache2/conf/tiddlywiki.conf
+FROM certbot/certbot:latest
+VOLUME /etc/letsencrypt
 ADD init-and-run /usr/local/bin/init-and-run
 RUN chmod a+x /usr/local/bin/*
-EXPOSE 80
-EXPOSE 443
-EXPOSE 444
+ADD root.crontab /var/spool/cron/crontabs/root
+ENTRYPOINT []
 CMD /usr/local/bin/init-and-run

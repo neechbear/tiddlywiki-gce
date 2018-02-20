@@ -1,0 +1,3 @@
+* * * * * /usr/local/bin/git-sync.sh
+* * * * * /usr/local/bin/static-website.sh
+0 4 * * * find /var/lib/tiddlywiki -name 'Draft_of_*.tid' -delete

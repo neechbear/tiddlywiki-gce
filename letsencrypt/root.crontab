@@ -1,0 +1,1 @@
+* * * * * echo "Refresh LetsEncrypt certificate here." && date > /usr/local/apache2/htdocs/.well-known/acme-challenge
