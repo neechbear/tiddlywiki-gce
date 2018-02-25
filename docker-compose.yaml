@@ -17,7 +17,7 @@ services:
       - tiddlywiki
     volumes:
       - /home/tiddlywiki:/var/lib/tiddlywiki
-      - /etc/letsencrypt:/etc/letsencrypt
+      - /etc/letsencrypt:/etc/letsencrypt:ro
 
   letsencrypt:
     build:
@@ -29,6 +29,7 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt
       - /home/tiddlywiki/htdocs/.well-known:/usr/local/apache2/htdocs/.well-known
     healthcheck:
+      # TODO: Use openssl and/or certbot to validate the certificates and expiry dates.
       test: ["CMD", "ls", "-l", "/etc/letsencrypt/live/${DOMAIN:-localhost.localdomain}/*.pem"]
       interval: 5m
       timeout: 2s
@@ -44,6 +45,7 @@ services:
       TW_RENDERTYPE: "${TW_RENDERTYPE:-text/plain}"
       TW_SERVETYPE: "${TW_SERVERTYPE:-text/html}"
       TW_USERNAME: "${TW_USERNAME:-anonymous}"
+      # We use Apache to overlay basic authentication on port tcp/444 only.
       #TW_PASSWORD: "${TW_PASSWORD:-}"
       TW_HOST: "${TW_HOST:-}"
       TW_PATHPREFIX: "${TW_PATHPREFIX:-}"
@@ -52,6 +54,7 @@ services:
     volumes:
       - /home/tiddlywiki:/var/lib/tiddlywiki
     healthcheck:
+      # TODO: Improve this to retrieve a known core system tiddler perhaps?
       test: ["CMD-SHELL", "printf 'GET /status HTTP/1.0\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 8080 | grep -wq tiddlywiki_version"]
       interval: 1m
       timeout: 2s
@@ -76,9 +79,10 @@ services:
       - 443:443
       - 444:444
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
-      - /home/tiddlywiki/htdocs:/usr/local/apache2/htdocs
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /home/tiddlywiki/htdocs:/usr/local/apache2/htdocs:ro
     healthcheck:
+      # TODO: Improve to test operation modes of all three tcp/80,443,444 ports.
       test: ["CMD-SHELL", "printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 80 | grep -wqF 'Location: https://dinglebop.codm/'"]
       interval: 1m
       timeout: 2s
