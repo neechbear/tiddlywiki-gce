@@ -2,8 +2,8 @@
 
 Dockerised TiddlyWiki 5 server inside Google Compute Engine.
 
-This is very much a work in progress still. I am simply commiting changes as I
-am developing and testing the code and doodads.
+***This is very much a work in progress still. I am simply commiting changes as I
+am developing and testing the code and doodads.***
 
 Deploy directly to GCE instance:
 
@@ -17,20 +17,10 @@ Test locally using Docker Compose:
 make test EMAIL=jdoe@mywiki.com DOMAIN=mywiki.com TW_USERNAME=jdoe TW_PASSWORD=password1234
 ```
 
-```
-12345678901234567890
-                    12345678901234567890
-                                        12345678901234567890
-                                                            12345678901234567890
-                                                                                12345678901234567890
-                                                                                                    1234567890
-                                                                                                              1234
-```
-
 The following TCP ports should be exposed for your web browser:
 
 | Port    | Example URL            | Permissions | Description |
-| -------:| ---------------------- | ----------- | ----------- |
+| ------- | ---------------------- | ----------- | ----------- |
 | tcp/80  | http://mywiki.com      | None        | HTTP automatically redirects to HTTPS |
 | tcp/443 | https://mywiki.com     | Read-only   | HTTPS TiddlyWiki (PUT and DELETE writes are silently ignored, responding with HTTP 405 response codes) |
 | tcp/444 | https://mywiki.com:444 | Read-write  | HTTPS TiddlyWiki (password protected with basic digest authentication) |
@@ -38,14 +28,57 @@ The following TCP ports should be exposed for your web browser:
 See https://nicolaw.uk/gcloud and https://nicolaw.uk/gcp for tangentally related
 notes on Google Cloud Platform.
 
+## Design Overview
+
+```
+                                                                        |\_/|
+                                                                       / @ @ \
+                                                   End-user browsing  ( ^ º ^ )
+                                                   https://mywiki.com  `>>x<<´
+                                                                       /  O  \
+
+                                                                          +
++--[Google Compute Engine]------------------------------------------------|--------------------------------------+
+|                                                                         |                                      |
+|  +--[Container-Optimized OS VM Instance]--------------------------------|-----------------------------------+  |
+|  |                                                                      |                                   |  |
+|  |  +--[Docker]--------------+  +--[Docker]-----------+  +--[Docker]----|-----+  +--[Docker]-------------+  |  |
+|  |  |                        |  |                     |  |              |     |  |                       |  |  |
+|  |  |  Scheduled automation  |  |  TiddlyWiki NodeJS  |  |  Apache      v     |  |  LetsEncrypt SSL      |  |  |
+|  |  |  tasks push backups    |  |  exposes tcp/8080   |  |  exposes           |  |  certificate          |  |  |
+|  |  |  to Git, & generate    |  |  to Apache.         |  |  tcp/80,443,444    |  |  generation           |  |  |
+|  |  |  static wiki page      |  |                     |  |  to the Internet.  |  |     automation and    |  |  |
+|  |  |  renderings.        <-------+                <-------+               <-------+   renewal.          |  |  |
+|  |  |                 +      |  |                     |  |                    |  |                       |  |  |
+|  |  +-----------------|------+  +---------------------+  +--------------------+  +-----------------------+  |  |
+|  |                    |                                                                                     |  |
+|  +--------------------|-------------------------------------------------------------------------------------+  |
+|                       |                                                                                        |
++-----------------------|----------------------------------------------------------------------------------------+
+                        |
++--[Git Repository]-----|------+
+|                       |      |
+|  An upstream Git      v      |
+|  repository provides         |
+|  a versioned backup store    |
+|  for TiddlyWiki .tid pages   |
+|  & rendered static content.  |
+|                              |
++------------------------------+
+```
+
+![Terminal screen capture exmaple of make test](https://i.imgur.com/4uXLEkR.gif)
+
 ## TODO
 
-* Make configuration tunable via GCE metadata (use
+* Make configuration tunable via cloud metadata (use
   https://cloud.google.com/compute/docs/storing-retrieving-metadata).
 * Setup LetsEncrypt automation (use
   https://github.com/node13h/automated-extras/blob/master/lib/nginx.sh or
   https://hub.docker.com/r/certbot/certbot/).
 * Setup pull (and push) of Tiddlers to and from GitHub repository.
+* Possibly use Terraform to orchestrate instance and Docker registry image
+  deployment to cloud platform.
 
 ## License
 
