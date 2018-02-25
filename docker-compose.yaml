@@ -43,7 +43,7 @@ services:
       TW_ROOTTIDDLER: "${TW_ROOTTIDDLER:-$:/core/save/all}"
       TW_RENDERTYPE: "${TW_RENDERTYPE:-text/plain}"
       TW_SERVETYPE: "${TW_SERVERTYPE:-text/html}"
-      TW_USERNAME: "${TW_USERNAME:-$USER}"
+      TW_USERNAME: "${TW_USERNAME:-anonymous}"
       #TW_PASSWORD: "${TW_PASSWORD:-}"
       TW_HOST: "${TW_HOST:-}"
       TW_PATHPREFIX: "${TW_PATHPREFIX:-}"
