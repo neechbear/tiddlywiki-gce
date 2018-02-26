@@ -80,6 +80,8 @@ notes on Google Cloud Platform.
   deployment to cloud platform.
 * Replace Apache with Nginx for better protection against the "dark arts"
   (slowloris)?
+* Combine tiddlywiki and automation images, but retain as two seperate runtime
+  containers.
 
 ## License
 

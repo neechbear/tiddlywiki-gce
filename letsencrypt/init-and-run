@@ -12,9 +12,14 @@ set -e
 #env
 
 LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
+HTDOCS="/usr/local/apache2/htdocs"
 
 if [ ! -d "$LIVEPATH" ] ; then
   mkdir -p "$LIVEPATH"
+fi
+
+if [ ! -d "$HTDOCS/.well-known" ] ; then
+  mkdir -p "$HTDOCS/.well-known"
 fi
 
 # Generate a self-signed certificate until LetsEncrypt does it's thing.

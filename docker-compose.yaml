@@ -6,6 +6,12 @@
 
 version: "3.4"
 
+volumes:
+  htdocs:
+  tiddlywiki:
+  # BUG: https://github.com/moby/moby/issues/3465
+  #letsencrypt:
+
 services:
   automation:
     build:
@@ -16,8 +22,17 @@ services:
     depends_on:
       - tiddlywiki
     volumes:
-      - /home/tiddlywiki:/var/lib/tiddlywiki
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - source: tiddlywiki
+        target: /var/lib/tiddlywiki
+        type: volume
+      - source: htdocs
+        target: /var/lib/tiddlywiki/htdocs
+        type: volume
+      - source: /tmp/tiddlywiki-letsencrypt
+        target: /etc/letsencrypt
+        # BUG: https://github.com/moby/moby/issues/3465
+        type: bind
+        read_only: true
 
   letsencrypt:
     build:
@@ -26,12 +41,17 @@ services:
       EMAIL: "${EMAIL:-webmaster@localhost.localdomain}"
       DOMAIN: "${DOMAIN:-localhost.localdomain}"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
-      - /home/tiddlywiki/htdocs/.well-known:/usr/local/apache2/htdocs/.well-known
+      - source: htdocs
+        target: /usr/local/apache2/htdocs
+        type: volume
+      - source: /tmp/tiddlywiki-letsencrypt
+        target: /etc/letsencrypt
+        # BUG: https://github.com/moby/moby/issues/3465
+        type: bind
     healthcheck:
       # TODO: Use openssl and/or certbot to validate the certificates and expiry dates.
-      test: ["CMD", "ls", "-l", "/etc/letsencrypt/live/${DOMAIN:-localhost.localdomain}/*.pem"]
-      interval: 5m
+      test: ["CMD", "ls", "-l", "/etc/letsencrypt/live/*/*.pem"]
+      interval: 1m
       timeout: 2s
       retries: 3
       start_period: 10s
@@ -52,7 +72,9 @@ services:
     expose:
       - 8080
     volumes:
-      - /home/tiddlywiki:/var/lib/tiddlywiki
+      - source: tiddlywiki
+        target: /var/lib/tiddlywiki
+        type: volume
     healthcheck:
       # TODO: Improve this to retrieve a known core system tiddler perhaps?
       test: ["CMD-SHELL", "printf 'GET /status HTTP/1.0\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 8080 | grep -wq tiddlywiki_version"]
@@ -79,8 +101,15 @@ services:
       - 443:443
       - 444:444
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /home/tiddlywiki/htdocs:/usr/local/apache2/htdocs:ro
+      - source: htdocs
+        target: /usr/local/apache2/htdocs
+        type: volume
+        read_only: true
+      - source: /tmp/tiddlywiki-letsencrypt
+        target: /etc/letsencrypt
+        # BUG: https://github.com/moby/moby/issues/3465
+        type: bind
+        read_only: true
     healthcheck:
       # TODO: Improve to test operation modes of all three tcp/80,443,444 ports.
       test: ["CMD-SHELL", "printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 80 | grep -wqF 'Location: https://dinglebop.codm/'"]
