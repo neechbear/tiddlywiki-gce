@@ -70,16 +70,14 @@ notes on Google Cloud Platform.
 
 ## TODO
 
+* Setup pull (and push) of Tiddlers to and from GitHub repository.
+* Make LetsEncrypt functionality a little more robust.
+* Finish deployment to GCE functionality.
 * Make configuration tunable via cloud metadata (use
   https://cloud.google.com/compute/docs/storing-retrieving-metadata).
-* Setup LetsEncrypt automation (use
-  https://github.com/node13h/automated-extras/blob/master/lib/nginx.sh or
-  https://hub.docker.com/r/certbot/certbot/).
-* Setup pull (and push) of Tiddlers to and from GitHub repository.
 * Possibly use Terraform to orchestrate instance and Docker registry image
   deployment to cloud platform.
-* Replace Apache with Nginx for better protection against the "dark arts"
-  (slowloris)?
+* Replace Apache with Nginx for better protection against slowloris?
 * Combine tiddlywiki and automation images, but retain as two seperate runtime
   containers.
 

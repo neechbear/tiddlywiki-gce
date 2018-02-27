@@ -11,7 +11,9 @@ set -e
 
 #env
 
-LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
+CONFPATH="/etc/letsencrypt"
+LIVEPATH="$CONFPATH/live/$DOMAIN"
+GLUEPATH="$CONFPATH/.glue"
 HTDOCS="/usr/local/apache2/htdocs"
 
 if [ ! -d "$LIVEPATH" ] ; then
@@ -20,6 +22,10 @@ fi
 
 if [ ! -d "$HTDOCS/.well-known" ] ; then
   mkdir -p "$HTDOCS/.well-known"
+fi
+
+if [ ! -e "$GLUEPATH" ] ; then
+  mkdir -p "$GLUEPATH"
 fi
 
 # Generate a self-signed certificate until LetsEncrypt does it's thing.
@@ -32,13 +38,36 @@ if   [ ! -e "$LIVEPATH/cert.pem" ] \
     -keyout "$LIVEPATH/privkey.pem" \
     -out "$LIVEPATH/cert.pem"
   cp "$LIVEPATH/cert.pem" "$LIVEPATH/fullchain.pem"
-  #openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
 fi
 
 # Generate initial LetsEncrypt certificate.
-if true ; then
+if ! openssl x509 -in "$LIVEPATH/cert.pem" -text -noout 2>&1 \
+  |  grep -qEi "(letsencrypt\.org|Let.s Encrypt)"
+then
   echo "Generate LetsEncrypt certificate here."
+  certbot certonly \
+    --agree-tos \
+    --non-interactive \
+    --email "$EMAIL" \
+    --config-dir "$GLUEPATH" \
+    --webroot \
+    --webroot-path "$HTDOCS" \
+    --domains "$DOMAIN"
+
+  # TODO: There is potential for a race condition here, so we should change this
+  #       to replace the old self-signed certificate in a single atomic
+  #       operation by changing a symbolic link. I think we're safe for the time
+  #       being though, because we know that Apache is already running,
+  #       otherwise certbot wouldn't have been able to finish the challenge
+  #       response by using the Apache webroot.
+  rm -Rf "$CONFPATH"/*
+  mv "$GLUEPATH"/* "$CONFPATH"
+  rm -Rf "$GLUEPATH"
+  ln -sfn "$CONFPATH" "$GLUEPATH"
 fi
+
+# Display certificate information.
+#openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
 
 # Launch cron daemon for LetsEncrypt to periodically refresh our certificate.
 exec crond -l 6 -d 6 -f
