@@ -31,38 +31,37 @@ notes on Google Cloud Platform.
 ## Design Overview
 
 ```
-                                                                        |\_/|
-                                                                       / @ @ \
-                                                   End-user browsing  ( ^ º ^ )
-                                                   https://mywiki.com  `>>x<<´
-                                                                       /  O  \
+                                                                      |\_/|
+                                                                     / @ @ \
+                                                 End-user browsing  ( ^ º ^ )
+                                                 https://mywiki.com  `>>x<<´
+                                                                     /  O  \
 
-                                                                          +
-+--[Google Compute Engine]------------------------------------------------|--------------------------------------+
-|                                                                         |                                      |
-|  +--[Container-Optimized OS VM Instance]--------------------------------|-----------------------------------+  |
-|  |                                                                      |                                   |  |
-|  |  +--[Docker]--------------+  +--[Docker]-----------+  +--[Docker]----|-----+  +--[Docker]-------------+  |  |
-|  |  |                        |  |                     |  |              |     |  |                       |  |  |
-|  |  |  Scheduled automation  |  |  TiddlyWiki NodeJS  |  |  Apache      v     |  |  LetsEncrypt SSL      |  |  |
-|  |  |  tasks push backups    |  |  exposes tcp/8080   |  |  exposes           |  |  certificate          |  |  |
-|  |  |  to Git, & generate    |  |  to Apache.         |  |  tcp/80,443,444    |  |  generation           |  |  |
-|  |  |  static wiki page      |  |                     |  |  to the Internet.  |  |     automation and    |  |  |
-|  |  |  renderings.        <-------+                <-------+               <-------+   renewal.          |  |  |
-|  |  |                 +      |  |                     |  |                    |  |                       |  |  |
-|  |  +-----------------|------+  +---------------------+  +--------------------+  +-----------------------+  |  |
-|  |                    |                                                                                     |  |
-|  +--------------------|-------------------------------------------------------------------------------------+  |
-|                       |                                                                                        |
-+-----------------------|----------------------------------------------------------------------------------------+
+                                                                        +
++--[Google Compute Engine]----------------------------------------------|------------------------------------+
+|                                                                       |                                    |
+|  +--[Container-Optimized OS VM Instance]------------------------------|---------------------------------+  |
+|  |                                                                    |                                 |  |
+|  |  +--[Docker]-----------+  +--[Docker]-----------+  +--[Docker]-----|-----+  +--[Docker]-----------+  |  |
+|  |  |                     |  |                     |  |               |     |  |                     |  |  |
+|  |  | Scheduled automation|  |  TiddlyWiki NodeJS  |  |  Apache       v     |  |  LetsEncrypt SSL    |  |  |
+|  |  | tasks push backups  |  |  exposes tcp/8080   |  |  exposes            |  |  certificate        |  |  |
+|  |  | to Git, & generate  |  |  to Apache.         |  |  tcp/80,443,444     |  |  generation         |  |  |
+|  |  | static wiki page    |  |                     |  |  to the Internet.   |  |     automation and  |  |  |
+|  |  | renderings.      <-------+                <-------+                <-------+   renewal.        |  |  |
+|  |  |                 +   |  |                     |  |                     |  |                     |  |  |
+|  |  +-----------------|---+  +---------------------+  +---------------------+  +---------------------+  |  |
+|  |                    |                                                                                 |  |
+|  +--------------------|---------------------------------------------------------------------------------+  |
+|                       |                                                                                    |
++-----------------------|------------------------------------------------------------------------------------+
                         |
 +--[Git Repository]-----|------+
 |                       |      |
-|  An upstream Git      v      |
-|  repository provides         |
-|  a versioned backup store    |
-|  for TiddlyWiki .tid pages   |
-|  & rendered static content.  |
+|  Upstream Git repo    v      |
+|  provides versioned          |
+|  backup store of TiddlyWiki  |
+|  pages and static content.   |
 |                              |
 +------------------------------+
 ```
@@ -79,6 +78,10 @@ notes on Google Cloud Platform.
 * Setup pull (and push) of Tiddlers to and from GitHub repository.
 * Possibly use Terraform to orchestrate instance and Docker registry image
   deployment to cloud platform.
+* Replace Apache with Nginx for better protection against the "dark arts"
+  (slowloris)?
+* Combine tiddlywiki and automation images, but retain as two seperate runtime
+  containers.
 
 ## License
 
