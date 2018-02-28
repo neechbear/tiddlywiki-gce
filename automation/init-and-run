@@ -10,12 +10,84 @@ set -e
 TWBASE="/var/lib/tiddlywiki"
 LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
 
+for var in $(env | awk -F= '{print $1}')
+do
+	if [ -z "$(eval "echo \$$var")" ]
+  then
+    eval "unset $var"
+  fi
+done
+
 cd "$TWBASE"
+
+if [ -n "$GIT_SSH_KEY" ]
+then
+  if [ ! -e ~/.ssh ]
+  then
+    mkdir -p ~/.ssh
+  fi
+  if [ ! -e ~/.ssh/known_hosts ]
+  then
+    for host in github.com gitlab.com butbucket.com
+    do
+      ssh-keyscan $host >> ~/.ssh/known_hosts
+    done
+  fi
+  echo "$GIT_SSH_KEY" > ~/.ssh/id_rsa
+  chmod -R o-rwx,g-rwx ~/.ssh/
+fi
 
 # Initialise the Git repository against the remote origin.
 if [ ! -d "$TWBASE/.git" ] ; then
-  git init
+  if ! git clone "$GIT_REPOSITORY" .
+  then
+    git init
+    echo '**/$__StoryList.tid' > .gitignore
+  fi
 fi
+
+for name in "$GIT_AUTHOR_NAME" "$GIT_COMMITTER_NAME" "$GIT_USERNAME"
+do
+  if [ -n "$name" ]
+  then
+    git config user.name "$name"
+    break
+  fi
+done
+
+for email in "$GIT_AUTHOR_EMAIL" "$GIT_COMMITTER_EMAIL" "$EMAIL"
+do
+  if [ -n "$email" ]
+  then
+    git config user.email "$email"
+    break
+  fi
+done
+
+if [ -n "$GIT_REPOSITORY" ]
+then
+  if ! git remote | grep -qx origin
+  then
+    git remote add origin "$GIT_REPOSITORY"
+  fi
+  git remote set-url origin "$GIT_REPOSITORY"
+  git remote -v
+
+  if [ -n "$GIT_USERNAME" ]
+  then
+    git config "credential.$GIT_REPOSITORY" "$GIT_USERNAME"
+  fi
+fi
+
+if [ -n "$GIT_PASSWORD" ] && [ -z "$GIT_ASKPASS" ]
+then
+	export GIT_ASKPASS="/usr/local/bin/git_askpass"
+  echo "#!/bin/sh" > "$GIT_ASKPASS"
+  echo "echo \"$GIT_PASSWORD\"" >> "$GIT_ASKPASS"
+  chmod u+x "$GIT_ASKPASS"
+fi
+
+git config -l
 
 # Launch cron daemon to schedule Git uploads and static website generation.
 exec crond -l 6 -d 6 -f
