@@ -26,7 +26,7 @@ changed_tiddlers () {
   find "$TWBASE/mywiki" \
     -name '*.tid' \
     -and -not -name '$__StoryList.*' \
-    -mmin -5
+    -mmin -6
 }
 
 urlencode () {

@@ -70,7 +70,7 @@ services:
         type: bind
     healthcheck:
       # TODO: Use openssl and/or certbot to validate the certificates and expiry dates.
-      test: ["CMD", "ls", "-l", "/etc/letsencrypt/live/*/*.pem"]
+      test: ["CMD", "ls", "/etc/letsencrypt/live/$DOMAIN/cert.pem"]
       interval: 1m
       timeout: 2s
       retries: 3
@@ -132,7 +132,7 @@ services:
         read_only: true
     healthcheck:
       # TODO: Improve to test operation modes of all three tcp/80,443,444 ports.
-      test: ["CMD-SHELL", "printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 80 | grep -wqF 'Location: https://dinglebop.codm/'"]
+      test: ["CMD-SHELL", "printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' | nc localhost 80 | grep -wqF 'Location: https://dinglebop.com/'"]
       interval: 1m
       timeout: 2s
       retries: 3
