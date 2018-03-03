@@ -19,8 +19,10 @@ GIT_SSH_KEY := id_rsa
 TW_USERNAME := anonymous
 TW_PASSWORD := letmein
 
+CP := cp
+
 TERRAFORM_TARGETS := apply destroy plan refresh
-.PHONY: $(TERRAFORM_TARGETS) test clean check_clean help
+.PHONY: $(TERRAFORM_TARGETS) test clean check_clean help automation/id_rsa
 
 .DEFAULT_GOAL := help
 
@@ -43,7 +45,10 @@ check_clean:
 clean: check_clean
 	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup
 
-$(TERRAFORM_TARGETS):
+automation/id_rsa: $(GIT_SSH_KEY)
+	$(CP) $< $@
+
+$(TERRAFORM_TARGETS): automation/id_rsa
 	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
 	@:$(call check_defined, INSTANCE_NAME, Google Cloud compute instance VM name)
 	terraform $@ \
@@ -57,7 +62,6 @@ $(TERRAFORM_TARGETS):
 		-var=letsencrypt_data="$(LETSENCRYPT_DATA)" \
 		-var=git_repository="$(GIT_REPOSITORY)" \
 		-var=git_username="$(GIT_USERNAME)" \
-		-var=git_ssh_key="$(GIT_SSH_KEY)" \
 		-var=tw_username="$(TW_USERNAME)" \
 		-var=tw_password="$(TW_PASSWORD)"
 
@@ -65,8 +69,8 @@ $(TERRAFORM_TARGETS):
 .terraform/plugins/*/terraform-provider-google_v*:
 	terraform init
 
-test:
-	GIT_SSH_KEY="$(cat $(GIT_SSH_KEY))" docker run \
+test: automation/id_rsa
+	docker run \
 		--rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v "$$PWD:/rootfs/$$PWD" \

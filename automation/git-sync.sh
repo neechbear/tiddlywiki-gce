@@ -9,7 +9,15 @@ TWBASE="/var/lib/tiddlywiki"
 
 cd "$TWBASE"
 
-if [ ! "$(git diff --shortstat 2> /dev/null | tail -n1)" = "" ]
+dirty_workspace () {
+  [ -n "$(git diff --shortstat 2> /dev/null | tail -n1)" ]
+}
+
+untracked_files () {
+  [ -n "$(git ls-files --others --exclude-standard)" ]
+}
+
+if [ "$1" = "force" ] || dirty_workspace || untracked_files
 then
   git add -A
   git commit -a -m "Automatic commit."

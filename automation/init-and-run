@@ -3,9 +3,9 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-set -e
+set -ex
 
-#env
+env
 
 TWBASE="/var/lib/tiddlywiki"
 LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
@@ -20,22 +20,14 @@ done
 
 cd "$TWBASE"
 
-if [ -n "$GIT_SSH_KEY" ]
+if [ ! -e ~/.ssh/known_hosts ]
 then
-  if [ ! -e ~/.ssh ]
-  then
-    mkdir -p ~/.ssh
-  fi
-  if [ ! -e ~/.ssh/known_hosts ]
-  then
-    for host in github.com gitlab.com butbucket.com
-    do
-      ssh-keyscan $host >> ~/.ssh/known_hosts
-    done
-  fi
-  echo "$GIT_SSH_KEY" > ~/.ssh/id_rsa
-  chmod -R o-rwx,g-rwx ~/.ssh/
+  for host in github.com gitlab.com butbucket.com
+  do
+    ssh-keyscan $host >> ~/.ssh/known_hosts
+  done
 fi
+chmod -R o-rwx,g-rwx ~/.ssh/
 
 # Initialise the Git repository against the remote origin.
 if [ ! -d "$TWBASE/.git" ] ; then

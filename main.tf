@@ -13,7 +13,6 @@ variable "email" {}
 variable "letsencrypt_data" { default = "/home/tiddlywiki/letsencrypt" }
 variable "git_repository" {}
 variable "git_username" {}
-variable "git_ssh_key" {}
 
 data "template_file" "environment" {
   template = "${file("${path.module}/tiddlywiki.env.tpl")}"
@@ -25,7 +24,6 @@ data "template_file" "environment" {
     letsencrypt_data = "${var.letsencrypt_data}"
     git_repository = "${var.git_repository}"
     git_username = "${var.git_username}"
-    git_ssh_key = "${file("${var.git_ssh_key}")}"
   }
 }
 

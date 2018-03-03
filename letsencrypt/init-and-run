@@ -7,9 +7,9 @@
 # SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
 # SSLCertificateChainFile /etc/letsencrypt/live/${DOMAIN}/fullchain.pem
 
-set -e
+set -ex
 
-#env
+env
 
 CONFPATH="/etc/letsencrypt"
 LIVEPATH="$CONFPATH/live/$DOMAIN"
@@ -85,7 +85,12 @@ then
 fi
 
 # Display certificate information.
-#openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
+openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
+
+if ! cert_is_letsencrypt
+then
+  exit 0
+fi
 
 # Launch cron daemon for LetsEncrypt to periodically refresh our certificate.
 exec crond -l 6 -d 6 -f
