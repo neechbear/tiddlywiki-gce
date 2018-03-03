@@ -115,6 +115,14 @@ resource "google_compute_instance" "tiddlywiki" {
   }
 }
 
+output "git_repository" {
+  value = "${var.git_repository}"
+}
+
+output "git_username" {
+  value = "${var.git_username}"
+}
+
 output "username" {
   value = "${var.tw_username}"
 }

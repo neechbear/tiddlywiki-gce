@@ -22,7 +22,6 @@ services:
       GIT_REPOSITORY: "$GIT_REPOSITORY"
       GIT_USERNAME: "$GIT_USERNAME"
       GIT_PASSWORD: "$GIT_PASSWORD"
-      GIT_SSH_KEY: "$GIT_SSH_KEY"
     volumes:
       - source: tiddlywiki
         target: /var/lib/tiddlywiki

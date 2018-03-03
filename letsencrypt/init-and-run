@@ -19,15 +19,15 @@ LIVEPATH="$CONFPATH/live/$DOMAIN"
 GLUEPATH="$CONFPATH/.glue"
 HTDOCS="/usr/local/apache2/htdocs"
 
-if [ ! -d "$LIVEPATH" ] ; then
+if [ ! -d "$LIVEPATH" ]; then
   mkdir -p "$LIVEPATH"
 fi
 
-if [ ! -d "$HTDOCS/.well-known" ] ; then
+if [ ! -d "$HTDOCS/.well-known" ]; then
   mkdir -p "$HTDOCS/.well-known"
 fi
 
-if [ ! -e "$GLUEPATH" ] ; then
+if [ ! -e "$GLUEPATH" ]; then
   mkdir -p "$GLUEPATH"
 fi
 
@@ -37,22 +37,26 @@ cert_is_letsencrypt () {
 }
 
 domain_responds () {
+  RC=1
   for try in 1 2 3 4 5
   do
-    if printf 'HEAD / HTTP/1.1\r\nHost: dinglebop.com\r\n\r\n' \
-      | nc "$1" 80 \
-      | grep -wqF 'Location: https://dinglebop.com/'
-    then
+    if [ -e "$HTDOCS/.well-known/tiddlywiki" ]; then
+      MYSIG="$(cat "$HTDOCS/.well-known/tiddlywiki")"
+    fi
+    THEIRSIG="$(printf 'GET /.well-known/tiddlywiki\r\n\r\n' | nc "$1" 80)"
+    if [ -n "$MYSIG" ] && [ -n "$THEIRSIG" ] && [ "$MYSIG" = "$THEIRSIG" ]; then
+      RC=0
       break
     fi
     sleep 5
   done
+  return $RC
 }
 
 # Generate a self-signed certificate until LetsEncrypt does it's thing.
 if   [ ! -e "$LIVEPATH/cert.pem" ] \
   || [ ! -e "$LIVEPATH/privkey.pem" ] \
-  || [ ! -e "$LIVEPATH/fullchain.pem" ] ; then
+  || [ ! -e "$LIVEPATH/fullchain.pem" ]; then
   openssl req \
     -subj "/CN=$DOMAIN/O=$DOMAIN/OU=$DOMAIN/L=Location/ST=State/C=GB" \
     -new -newkey rsa:4096 -days 1180 -nodes -x509 \
@@ -63,8 +67,7 @@ fi
 
 # Generate initial LetsEncrypt certificate.
 if ! cert_is_letsencrypt "$LIVEPATH/cert.pem" \
-  && domain_responds "$DOMAIN"
-then
+  && domain_responds "$DOMAIN"; then
   echo "Generate LetsEncrypt certificate here."
   certbot certonly \
     --agree-tos \
@@ -90,8 +93,7 @@ fi
 # Display certificate information.
 openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
 
-if ! cert_is_letsencrypt
-then
+if ! cert_is_letsencrypt; then
   exit 0
 fi
 
