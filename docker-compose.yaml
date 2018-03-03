@@ -39,8 +39,6 @@ services:
       GIT_NAMESPACE: "$GIT_NAMESPACE"
       GIT_FLUSH: "$GIT_FLUSH"
       GIT_REFLOG_ACTION: "$GIT_REFLOG_ACTION"
-    depends_on:
-      - tiddlywiki
     volumes:
       - source: tiddlywiki
         target: /var/lib/tiddlywiki
@@ -91,6 +89,8 @@ services:
       TW_PATHPREFIX: "${TW_PATHPREFIX:-}"
     expose:
       - 8080
+    depends_on:
+      - automation
     volumes:
       - source: tiddlywiki
         target: /var/lib/tiddlywiki

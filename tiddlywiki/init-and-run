@@ -5,28 +5,50 @@
 
 set -ex
 
-_twHOME="/var/lib/tiddlywiki"
-_twPATCH="/usr/local/src/syncer.patch"
-_twSYNCERSRC="/usr/local/lib/node_modules/tiddlywiki/core/modules/syncer.js"
-_twSYNCERDST="$_twHOME/mywiki/tiddlers/\$__core_modules_syncer.js"
+TWBASE="/var/lib/tiddlywiki"
+SYNCPATCH="/usr/local/src/syncer.patch"
+SYNCSRC="/usr/local/lib/node_modules/tiddlywiki/core/modules/syncer.js"
+SYNCDST="$TWBASE/mywiki/tiddlers/\$__core_modules_syncer.js"
 
-if [ ! -d "$_twHOME/mywiki" ] ; then
-  tiddlywiki mywiki --init server
-fi
+cd "$TWBASE"
 
-if [ ! -e "$_twSYNCERDST" ] ; then
-  if [ ! -d "$_twHOME/mywiki/tiddlers" ] ; then
-    mkdir -p "$_twHOME/mywiki/tiddlers"
+for try in 1 2 3 4 5
+do
+  if [ -d .git ]
+  then
+    break
   fi
-  cp "$_twSYNCERSRC" "$_twSYNCERDST"
-  patch "$_twSYNCERDST" "$_twPATCH"
+  sleep 5
+done
+
+for try in 1 2 3 4 5
+do
+  if [ ! -d mywiki ] ; then
+    if tiddlywiki mywiki --init server
+    then
+      break
+    fi
+    sleep 5
+  fi
+done
+
+if [ ! -e "$SYNCDST" ]
+then
+  if [ ! -d mywiki/tiddlers ]
+  then
+    mkdir -p mywiki/tiddlers
+  fi
+  cp "$SYNCSRC" "$SYNCDST"
+  patch "$SYNCDST" "$SYNCPATCH"
 fi
 
-if [ -z "$TW_PORT" ] ; then
+if [ -z "$TW_PORT" ]
+then
   TW_PORT="8080"
 fi
 
-if [ -z "$TW_HOST" ] ; then
+if [ -z "$TW_HOST" ]
+then
   TW_HOST="0.0.0.0"
 fi
 

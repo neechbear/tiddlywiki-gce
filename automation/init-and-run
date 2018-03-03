@@ -31,11 +31,7 @@ chmod -R o-rwx,g-rwx ~/.ssh/
 
 # Initialise the Git repository against the remote origin.
 if [ ! -d "$TWBASE/.git" ] ; then
-  if ! git clone "$GIT_REPOSITORY" .
-  then
-    git init
-    echo '**/$__StoryList.tid' > .gitignore
-  fi
+  git init
 fi
 
 for name in "$GIT_AUTHOR_NAME" "$GIT_COMMITTER_NAME" "$GIT_USERNAME"
@@ -58,18 +54,25 @@ done
 
 if [ -n "$GIT_REPOSITORY" ]
 then
+  if [ -n "$GIT_USERNAME" ]
+  then
+    git config "credential.$GIT_REPOSITORY" "$GIT_USERNAME"
+  fi
+
   if ! git remote | grep -qx origin
   then
     git remote add origin "$GIT_REPOSITORY"
   fi
   git remote set-url origin "$GIT_REPOSITORY"
   git remote -v
-
-  if [ -n "$GIT_USERNAME" ]
+  git fetch
+  if git branch -a | grep -Ewq '(master|remotes/origin/master)$'
   then
-    git config "credential.$GIT_REPOSITORY" "$GIT_USERNAME"
+    git checkout master
   fi
 fi
+
+echo '**/$__StoryList.tid' > .gitignore
 
 if [ -n "$GIT_PASSWORD" ] && [ -z "$GIT_ASKPASS" ]
 then

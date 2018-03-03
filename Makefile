@@ -21,8 +21,9 @@ TW_PASSWORD := letmein
 
 CP := cp
 
-TERRAFORM_TARGETS := apply destroy plan refresh
-.PHONY: $(TERRAFORM_TARGETS) test clean check_clean help automation/id_rsa
+TF_AUTO_APPROVE :=
+TF_TARGETS := apply destroy plan refresh
+.PHONY: $(TF_TARGETS) test clean check_clean help automation/id_rsa
 
 .DEFAULT_GOAL := help
 
@@ -48,10 +49,10 @@ clean: check_clean
 automation/id_rsa: $(GIT_SSH_KEY)
 	$(CP) $< $@
 
-$(TERRAFORM_TARGETS): automation/id_rsa
+$(TF_TARGETS): automation/id_rsa
 	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
 	@:$(call check_defined, INSTANCE_NAME, Google Cloud compute instance VM name)
-	terraform $@ \
+	terraform $@ $(if $(TF_AUTO_APPROVE),-auto-approve,) \
 		-var=project="$(GOOGLE_PROJECT)" \
 		-var=region="$(GOOGLE_REGION)" \
 		-var=zone="$(GOOGLE_ZONE)" \
