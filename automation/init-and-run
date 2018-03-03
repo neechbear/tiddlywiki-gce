@@ -25,7 +25,7 @@ cd "$TWBASE"
 
 if [ ! -e ~/.ssh/known_hosts ]
 then
-  for host in github.com gitlab.com butbucket.com
+  for host in github.com gitlab.com bitbucket.org
   do
     ssh-keyscan $host >> ~/.ssh/known_hosts
   done

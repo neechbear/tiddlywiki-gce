@@ -23,22 +23,6 @@ services:
       GIT_USERNAME: "$GIT_USERNAME"
       GIT_PASSWORD: "$GIT_PASSWORD"
       GIT_SSH_KEY: "$GIT_SSH_KEY"
-      GIT_AUTHOR_NAME: "$GIT_AUTHOR_NAME"
-      GIT_AUTHOR_EMAIL: "$GIT_AUTHOR_EMAIL"
-      GIT_COMMITTER_NAME: "$GIT_COMMITTER_NAME"
-      GIT_COMMITTER_EMAIL: "$GIT_COMMITTER_EMAIL"
-      GIT_SSL_NO_VERIFY: "$GIT_SSL_NO_VERIFY"
-      GIT_MERGE_VERBOSITY: "$GIT_MERGE_VERBOSITY"
-      GIT_TRACE: "$GIT_TRACE"
-      GIT_TRACE_PACK_ACCESS: "$GIT_TRACE_PACK_ACCESS"
-      GIT_TRACE_PACKET: "$GIT_TRACE_PACKET"
-      GIT_TRACE_PERFORMANCE: "$GIT_TRACE_PERFORMANCE"
-      GIT_TRACE_SETUP: "$GIT_TRACE_SETUP"
-      GIT_SSH: "$GIT_SSH"
-      GIT_ASKPASS: "$GIT_ASKPASS"
-      GIT_NAMESPACE: "$GIT_NAMESPACE"
-      GIT_FLUSH: "$GIT_FLUSH"
-      GIT_REFLOG_ACTION: "$GIT_REFLOG_ACTION"
     volumes:
       - source: tiddlywiki
         target: /var/lib/tiddlywiki
@@ -78,15 +62,7 @@ services:
     build:
       context: tiddlywiki
     environment:
-      TW_PORT: "${TW_PORT:-8080}"
-      TW_ROOTTIDDLER: "${TW_ROOTTIDDLER:-$:/core/save/all}"
-      TW_RENDERTYPE: "${TW_RENDERTYPE:-text/plain}"
-      TW_SERVETYPE: "${TW_SERVERTYPE:-text/html}"
       TW_USERNAME: "${TW_USERNAME:-anonymous}"
-      # We use Apache to overlay basic authentication on port tcp/444 only.
-      #TW_PASSWORD: "${TW_PASSWORD:-}"
-      TW_HOST: "${TW_HOST:-}"
-      TW_PATHPREFIX: "${TW_PATHPREFIX:-}"
     expose:
       - 8080
     depends_on:
