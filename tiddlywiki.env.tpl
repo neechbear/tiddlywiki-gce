@@ -1,0 +1,8 @@
+DOMAIN="${domain}"
+EMAIL="${email}"
+LETSENCRYPT_DATA="${letsencrypt_data}"
+GIT_REPOSITORY="${git_repository}"
+GIT_USERNAME="${git_username}"
+GIT_SSH_KEY="${git_ssh_key}"
+TW_PASSWORD="${tw_password}"
+TW_USERNAME="${tw_username}"

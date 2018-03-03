@@ -1,31 +1,84 @@
-.PHONY: deploy test
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-INSTANCE_NAME := tiddlywiki
-ZONE := europe-west1-d
+GOOGLE_PROJECT ?=
+GOOGLE_REGION ?= europe-west1
+GOOGLE_ZONE ?= $(GOOGLE_REGION)-d
+
+INSTANCE_NAME :=
 MACHINE_TYPE := f1-micro
-COMPUTE_IMAGE = $(shell gcloud compute images list --sort-by ~NAME --format json --filter "cos-stable" | jq -r '.[0].name')
+
+DOCKER_COMPOSE_VER := 1.19.0
+
+DOMAIN :=
+EMAIL :=
+LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
+GIT_REPOSITORY :=
+GIT_USERNAME :=
+GIT_SSH_KEY := id_rsa
+TW_USERNAME := anonymous
+TW_PASSWORD := letmein
+
+TERRAFORM_TARGETS := apply destroy plan refresh
+.PHONY: $(TERRAFORM_TARGETS) test clean check_clean help
+
+.DEFAULT_GOAL := help
+
+-include secret.mk
+
+help:
+	@echo "Available targets:"
+	@echo "  make help"
+	@echo "  make test"
+	@echo "  make apply"
+	@echo "  make destroy"
+	@echo "  make plan"
+	@echo "  make refresh"
+	@echo "  make clean"
+
+check_clean:
+	@echo "Terraform plugins and workspace state will be permanently destroyed!"
+	@echo -n "Are you sure? [y/N] " && read ans && [ "$$ans" = "y" ]
+
+clean: check_clean
+	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup
+
+$(TERRAFORM_TARGETS):
+	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
+	@:$(call check_defined, INSTANCE_NAME, Google Cloud compute instance VM name)
+	terraform $@ \
+		-var=project="$(GOOGLE_PROJECT)" \
+		-var=region="$(GOOGLE_REGION)" \
+		-var=zone="$(GOOGLE_ZONE)" \
+		-var=name="$(INSTANCE_NAME)" \
+		-var=machine_type="$(MACHINE_TYPE)" \
+		-var=domain="$(DOMAIN)" \
+		-var=email="$(EMAIL)" \
+		-var=letsencrypt_data="$(LETSENCRYPT_DATA)" \
+		-var=git_repository="$(GIT_REPOSITORY)" \
+		-var=git_username="$(GIT_USERNAME)" \
+		-var=git_ssh_key="$(GIT_SSH_KEY)" \
+		-var=tw_username="$(TW_USERNAME)" \
+		-var=tw_password="$(TW_PASSWORD)"
+
+.terraform/plugins/*/terraform-provider-template_v*:
+.terraform/plugins/*/terraform-provider-google_v*:
+	terraform init
 
 test:
-	#docker run \
-	#	--rm \
-	#	-v /var/run/docker.sock:/var/run/docker.sock \
-	#	-v "$$PWD:/rootfs/$$PWD" \
-	#	-w "/rootfs/$$PWD" \
-	#	--env-file env-file \
-	#  docker/compose:1.19.0 build --no-cache
-	docker run \
+	GIT_SSH_KEY="$(cat $(GIT_SSH_KEY))" docker run \
 		--rm \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v "$$PWD:/rootfs/$$PWD" \
 		-w "/rootfs/$$PWD" \
 		--env-file env-file \
-	  docker/compose:1.19.0 up --build --force-recreate
+	  docker/compose:$(DOCKER_COMPOSE_VER) up --build --force-recreate
 
-deploy:
-	gcloud compute instances create $(INSTANCE_NAME) \
-		--image "$(COMPUTE_IMAGE)" \
-		--image-project cos-cloud \
-		--zone $(ZONE) \
-		--machine-type $(MACHINE_TYPE) \
-		--tags http-server,https-server \
-		--metadata-from-file user-data=cloud-config.yaml
+check_defined = \
+  $(strip $(foreach 1,$1, \
+    $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+  $(if $(value $1),, \
+    $(error Undefined $1$(if $2, ($2))$(if $(value @), \
+      required by target `$@')))
+

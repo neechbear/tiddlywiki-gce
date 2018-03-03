@@ -1,20 +1,9 @@
----
 #cloud-config
-
-# MIT License
-# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
-
-#
-#
-# This is far from anything like what is required at the moment.
-# Just try testing with docker-compose for the moment. This is
-# still blah.
-#
-#
 
 users:
 - name: tiddlywiki
   uid: 2000
+  homedir: /home/tiddlywiki
 
 write_files:
 - path: /etc/systemd/system/tiddlywiki.service
@@ -22,13 +11,32 @@ write_files:
   owner: root
   content: |
     [Unit]
-    Description=TiddlyWiki 5 server
-
+    Description=TiddlyWiki
+    
     [Service]
-    ExecStart=/usr/bin/docker run --rm -u 2000 -v /home/tiddlywiki:/var/lib/tiddlywiki -p 8080:8080 --name=tiddlywiki nicolaw/tiddlywiki:latest
-    ExecStop=/usr/bin/docker stop tiddlywiki
-    ExecStopPost=/usr/bin/docker rm tiddlywiki
+    EnvironmentFile=/home/tiddlywiki/systemd/tiddlywiki.env
+    WorkingDirectory=/home/tiddlywiki/docker
+    ExecStart=/usr/bin/docker run --name=docker-compose \
+                                  --rm --env-file env-file \
+                                  -v /var/run/docker.sock:/var/run/docker.sock \
+                                  -v "/home/tiddlywiki/docker:/rootfs/home/tiddlywiki/docker" \
+                                  -w "/rootfs/home/tiddlywiki/docker" \
+                                  docker/compose:1.19.0 \
+                                  up --build --force-recreate
+    ExecStop=/usr/bin/docker stop docker-compose
+    ExecStopPost=/usr/bin/docker rm docker-compose
+    RestartSec=5
+    Restart=always
 
 runcmd:
+- mkdir /home/tiddlywiki/systemd
+- mkdir /home/tiddlywiki/letsencrypt
+- mkdir /home/tiddlywiki/docker
+- mkdir /home/tiddlywiki/docker/apache
+- mkdir /home/tiddlywiki/docker/automation
+- mkdir /home/tiddlywiki/docker/letsencrypt
+- mkdir /home/tiddlywiki/docker/tiddlywiki
+- chown -R tiddlywiki /home/tiddlywiki
+- chgrp -R tiddlywiki /home/tiddlywiki
 - systemctl daemon-reload
-- systemctl start tiddlywiki.service
+- systemctl start tiddlywiki.service || true

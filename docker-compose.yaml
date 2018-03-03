@@ -48,7 +48,7 @@ services:
       - source: htdocs
         target: /var/lib/tiddlywiki/htdocs
         type: volume
-      - source: /tmp/tiddlywiki-letsencrypt
+      - source: "${LETSENCRYPT_DATA:-/etc/letsencrypt}"
         target: /etc/letsencrypt
         # BUG: https://github.com/moby/moby/issues/3465
         type: bind
@@ -64,7 +64,7 @@ services:
       - source: htdocs
         target: /usr/local/apache2/htdocs
         type: volume
-      - source: /tmp/tiddlywiki-letsencrypt
+      - source: "${LETSENCRYPT_DATA:-/etc/letsencrypt}"
         target: /etc/letsencrypt
         # BUG: https://github.com/moby/moby/issues/3465
         type: bind
@@ -125,7 +125,7 @@ services:
         target: /usr/local/apache2/htdocs
         type: volume
         read_only: true
-      - source: /tmp/tiddlywiki-letsencrypt
+      - source: "${LETSENCRYPT_DATA:-/etc/letsencrypt}"
         target: /etc/letsencrypt
         # BUG: https://github.com/moby/moby/issues/3465
         type: bind

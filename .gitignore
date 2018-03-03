@@ -1,4 +1,8 @@
-*.json
-*secret*
-*key*
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
+.ssh
 id_*
+*.swp
+*.key
+*secret*
