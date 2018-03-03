@@ -1,3 +1,6 @@
+# MIT License
+# Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
+
 variable "trusted_cidr" { type = "list" default = ["0.0.0.0/0"] }
 
 resource "google_compute_firewall" "allow-ssh-trusted" {  

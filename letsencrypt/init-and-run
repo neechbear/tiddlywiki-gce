@@ -9,6 +9,9 @@
 
 set -ex
 
+# Should we set DOMAIN to the external IP if it is not set?
+#export DOMAIN="$(curl -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip")"
+
 env
 
 CONFPATH="/etc/letsencrypt"

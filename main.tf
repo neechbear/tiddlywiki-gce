@@ -2,35 +2,54 @@
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
 variable "zone" {}
-variable "name" {}
+variable "name" { default = "" }
 variable "machine_type" { default = "f1-micro" }
 variable "image" { default = "cos-cloud/cos-stable" }
 
-variable "tw_username" { default = "anonymous" }
-variable "tw_password" { default = "letmein" }
 variable "domain" {}
 variable "email" {}
-variable "letsencrypt_data" { default = "/home/tiddlywiki/letsencrypt" }
+variable "tw_username" { default = "anonymous" }
+variable "tw_password" { default = "" }
 variable "git_repository" {}
 variable "git_username" {}
+variable "git_password" {}
+variable "letsencrypt_data" { default = "/home/tiddlywiki/letsencrypt" }
+
+locals {
+  tw_password = "${var.tw_password == "" ? random_string.password.result : var.tw_password}"
+  name = "${var.name == "" ? "tiddlywiki-${random_string.name.result}" : var.name}"
+}
+
+resource "random_string" "name" {
+  length = 6
+  upper = false
+  special = false
+}
 
 data "template_file" "environment" {
   template = "${file("${path.module}/tiddlywiki.env.tpl")}"
   vars {
-    domain = "${var.domain}"
-    email = "${var.email}"
-    tw_username = "${var.tw_username}"
-    tw_password = "${var.tw_password}"
+    domain           = "${var.domain}"
+    email            = "${var.email}"
+    tw_username      = "${var.tw_username}"
+    tw_password      = "${local.tw_password}"
+    git_repository   = "${var.git_repository}"
+    git_username     = "${var.git_username}"
+    git_password     = "${var.git_password}"
     letsencrypt_data = "${var.letsencrypt_data}"
-    git_repository = "${var.git_repository}"
-    git_username = "${var.git_username}"
   }
 }
 
 resource "google_compute_instance" "tiddlywiki" {
-  name         = "${var.name}"
+  name         = "${local.name}"
   machine_type = "${var.machine_type}"
   zone         = "${var.zone}"
+
+  scheduling {
+    preemptible = false
+    on_host_maintenance = "MIGRATE"
+    automatic_restart = true
+  }
 
   boot_disk {
     initialize_params {
@@ -40,15 +59,7 @@ resource "google_compute_instance" "tiddlywiki" {
 
   network_interface {
     network = "default"
-    access_config {
-      # Ephemeral IP
-    }
-  }
-
-  scheduling {
-    preemptible = false
-    on_host_maintenance = "MIGRATE"
-    automatic_restart = true
+    access_config {}
   }
 
   tags = ["trusted-ssh", "http-server", "https-server"]
@@ -72,28 +83,58 @@ resource "google_compute_instance" "tiddlywiki" {
     content = "${data.template_file.environment.rendered}"
     destination = "/home/tiddlywiki/systemd/tiddlywiki.env"
   }
+
   provisioner "file" {
     source = "apache/"
     destination = "/home/tiddlywiki/docker/apache"
   }
+
   provisioner "file" {
     source = "automation/"
     destination = "/home/tiddlywiki/docker/automation"
   }
+
   provisioner "file" {
     source = "letsencrypt/"
     destination = "/home/tiddlywiki/docker/letsencrypt"
   }
+
   provisioner "file" {
     source = "tiddlywiki/"
     destination = "/home/tiddlywiki/docker/tiddlywiki"
   }
+
   provisioner "file" {
     source = "docker-compose.yaml"
     destination = "/home/tiddlywiki/docker/docker-compose.yaml"
   }
+
   provisioner "file" {
     source = "env-file"
     destination = "/home/tiddlywiki/docker/env-file"
   }
+}
+
+output "username" {
+  value = "${var.tw_username}"
+}
+
+output "password" {
+  value = "${local.tw_password}"
+}
+
+output "private_ip" {
+  value = "${google_compute_instance.tiddlywiki.network_interface.0.address}"
+}
+
+output "public_ip" {
+  value = "${google_compute_instance.tiddlywiki.network_interface.0.access_config.0.assigned_nat_ip}"
+}
+
+output "url" {
+  value = "https://${google_compute_instance.tiddlywiki.network_interface.0.access_config.0.assigned_nat_ip}"
+}
+
+output "rw_url" {
+  value = "https://${urlencode("${var.tw_username}")}:${urlencode("${local.tw_password}")}@${google_compute_instance.tiddlywiki.network_interface.0.access_config.0.assigned_nat_ip}:444"
 }

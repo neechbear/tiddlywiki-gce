@@ -2,19 +2,31 @@
 
 Dockerised TiddlyWiki 5 server inside Google Compute Engine.
 
-***This is very much a work in progress still. I am simply commiting changes as I
-am developing and testing the code and doodads.***
+***This is very much a work in progress still.
+I am using it as an exercise to learn Terraform.
+Expect to see frequent and unstable code chanes.***
 
-Deploy directly to GCE instance:
+See https://nicolaw.uk/gcloud and https://nicolaw.uk/gcp for tangentally
+related notes on Google Cloud Platform.
+
+## Quickstart
+
+Deploy directly to GCE instance using Terraform:
 
 ```bash
-make deploy EMAIL=jdoe@mywiki.com DOMAIN=mywiki.com TW_USERNAME=jdoe TW_PASSWORD=password1234
+ssh-add ~/.ssh/google_compute_engine
+make apply \
+  EMAIL=jdoe@mywiki.com DOMAIN=mywiki.com \
+  TW_USERNAME=jdoe TW_PASSWORD=password1234 \
+  GIT_USERNAME=jdoe GIT_SSH_KEY=~/.ssh/id_rsa
 ```
 
 Test locally using Docker Compose:
 
 ```bash
-make test EMAIL=jdoe@mywiki.com DOMAIN=mywiki.com TW_USERNAME=jdoe TW_PASSWORD=password1234
+make test \
+  EMAIL=jdoe@mywiki.com DOMAIN=mywiki.com \
+  TW_USERNAME=jdoe TW_PASSWORD=password1234
 ```
 
 The following TCP ports should be exposed for your web browser:
@@ -24,9 +36,6 @@ The following TCP ports should be exposed for your web browser:
 | tcp/80  | http://mywiki.com      | None        | HTTP automatically redirects to HTTPS |
 | tcp/443 | https://mywiki.com     | Read-only   | HTTPS TiddlyWiki (PUT and DELETE writes are silently ignored, responding with HTTP 405 response codes) |
 | tcp/444 | https://mywiki.com:444 | Read-write  | HTTPS TiddlyWiki (password protected with basic digest authentication) |
-
-See https://nicolaw.uk/gcloud and https://nicolaw.uk/gcp for tangentally related
-notes on Google Cloud Platform.
 
 ## Design Overview
 
@@ -70,16 +79,11 @@ notes on Google Cloud Platform.
 
 ## TODO
 
-* Setup pull (and push) of Tiddlers to and from GitHub repository.
+* Make push of Tiddlers to Git more robust on merge conflicts.
 * Make LetsEncrypt functionality a little more robust.
-* Finish deployment to GCE functionality.
-* Make configuration tunable via cloud metadata (use
-  https://cloud.google.com/compute/docs/storing-retrieving-metadata).
-* Possibly use Terraform to orchestrate instance and Docker registry image
-  deployment to cloud platform.
-* Replace Apache with Nginx for better protection against slowloris?
-* Combine tiddlywiki and automation images, but retain as two seperate runtime
-  containers.
+* Improve Terraform configuration (I'm still learning Terraform).
+* Maybe replace Apache with Nginx for better protection against slowloris?
+* Maybe tiddlywiki and automation images, but retain seperate containers.
 
 ## License
 

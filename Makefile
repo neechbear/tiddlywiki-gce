@@ -1,29 +1,45 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
+# Well-known GCP environment variables.
 GOOGLE_PROJECT ?=
 GOOGLE_REGION ?= europe-west1
 GOOGLE_ZONE ?= $(GOOGLE_REGION)-d
 
+# Defaults provided by Terraform.
 INSTANCE_NAME :=
 MACHINE_TYPE := f1-micro
 
-DOCKER_COMPOSE_VER := 1.19.0
-
+# Apache & Let's Encrypt certificate generation.
 DOMAIN :=
 EMAIL :=
-LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
+
+# Password protection for TiddlyWiki write access.
+TW_USERNAME := anonymous
+TW_PASSWORD :=
+
+# Upstream repliaction of TiddlyWiki data.
 GIT_REPOSITORY :=
 GIT_USERNAME :=
+GIT_PASSWORD :=
 GIT_SSH_KEY := id_rsa
-TW_USERNAME := anonymous
-TW_PASSWORD := letmein
 
-CP := cp
+# Local bind-mount location to store Let's Encrypt certificates.
+LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
 
+# Explicit version required as no latest tag exists.
+DOCKER_COMPOSE_VER := 1.19.0
+
+# Terraform targets and providers.
 TF_AUTO_APPROVE :=
 TF_TARGETS := apply destroy plan refresh
-.PHONY: $(TF_TARGETS) test clean check_clean help automation/id_rsa
+TF_PROVIDERS := template google random
+TF_PLUGINS := $(addsuffix _v*, $(addprefix .terraform/plugins/*/terraform-provider-, $(TF_PLUGINS)))
+
+AUTOMATION_SSH_KEY := $(if $(GIT_SSH_KEY),automation/id_rsa,)
+CP := cp
+
+.PHONY: $(TF_TARGETS) test clean check_clean help
 
 .DEFAULT_GOAL := help
 
@@ -43,15 +59,22 @@ check_clean:
 	@echo "Terraform plugins and workspace state will be permanently destroyed!"
 	@echo -n "Are you sure? [y/N] " && read ans && [ "$$ans" = "y" ]
 
-clean: check_clean
+clean:
+	$(RM) -R $(AUTOMATION_SSH_KEY)
+
+veryclean: check_clean clean
 	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup
 
-automation/id_rsa: $(GIT_SSH_KEY)
+$(AUTOMATION_SSH_KEY): $(GIT_SSH_KEY)
 	$(CP) $< $@
 
-$(TF_TARGETS): automation/id_rsa
+$(TF_PLUGINS):
+	terraform init
+
+# TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
+#       password instead of SSH key.
+$(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS)
 	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
-	@:$(call check_defined, INSTANCE_NAME, Google Cloud compute instance VM name)
 	terraform $@ $(if $(TF_AUTO_APPROVE),-auto-approve,) \
 		-var=project="$(GOOGLE_PROJECT)" \
 		-var=region="$(GOOGLE_REGION)" \
@@ -60,16 +83,15 @@ $(TF_TARGETS): automation/id_rsa
 		-var=machine_type="$(MACHINE_TYPE)" \
 		-var=domain="$(DOMAIN)" \
 		-var=email="$(EMAIL)" \
-		-var=letsencrypt_data="$(LETSENCRYPT_DATA)" \
+		-var=tw_username="$(TW_USERNAME)" \
+		-var=tw_password="$(TW_PASSWORD)" \
 		-var=git_repository="$(GIT_REPOSITORY)" \
 		-var=git_username="$(GIT_USERNAME)" \
-		-var=tw_username="$(TW_USERNAME)" \
-		-var=tw_password="$(TW_PASSWORD)"
+		-var=git_password="$(GIT_PASSWORD)" \
+		-var=letsencrypt_data="$(LETSENCRYPT_DATA)"
 
-.terraform/plugins/*/terraform-provider-template_v*:
-.terraform/plugins/*/terraform-provider-google_v*:
-	terraform init
-
+# TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
+#       password instead of SSH key.
 test: automation/id_rsa
 	docker run \
 		--rm \
