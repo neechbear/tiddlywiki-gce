@@ -1,10 +1,10 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-variable "trusted_cidr" { type = "list" default = ["0.0.0.0/0"] }
+variable "trusted_cidr" { default = ["0.0.0.0/0"] }
 
 resource "google_compute_firewall" "allow-ssh-trusted" {  
-    name = "allow-ssh-trusted"
+    name = "allow-ssh-trusted-${local.name}"
     network = "default"
     allow {
         protocol = "tcp"
@@ -15,7 +15,7 @@ resource "google_compute_firewall" "allow-ssh-trusted" {
 }
 
 resource "google_compute_firewall" "allow-http" {  
-    name = "allow-http"
+    name = "allow-http-${local.name}"
     network = "default"
     allow {
         protocol = "tcp"

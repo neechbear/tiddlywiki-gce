@@ -9,6 +9,7 @@ GOOGLE_ZONE ?= $(GOOGLE_REGION)-d
 # Defaults provided by Terraform.
 INSTANCE_NAME :=
 MACHINE_TYPE := f1-micro
+TRUSTED_CIDR := 0.0.0.0/0
 
 # Apache & Let's Encrypt certificate generation.
 DOMAIN :=
@@ -38,6 +39,8 @@ TF_PLUGINS := $(addsuffix _v*, $(addprefix .terraform/plugins/*/terraform-provid
 
 AUTOMATION_SSH_KEY := $(if $(GIT_SSH_KEY),automation/id_rsa,)
 CP := cp
+SPACE := " "
+COMMA := ,
 
 .PHONY: $(TF_TARGETS) test clean check_clean help
 
@@ -76,19 +79,20 @@ $(TF_PLUGINS):
 $(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS)
 	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
 	terraform $@ $(if $(TF_AUTO_APPROVE),-auto-approve,) \
-		-var=project="$(GOOGLE_PROJECT)" \
-		-var=region="$(GOOGLE_REGION)" \
-		-var=zone="$(GOOGLE_ZONE)" \
-		-var=name="$(INSTANCE_NAME)" \
-		-var=machine_type="$(MACHINE_TYPE)" \
-		-var=domain="$(DOMAIN)" \
-		-var=email="$(EMAIL)" \
-		-var=tw_username="$(TW_USERNAME)" \
-		-var=tw_password="$(TW_PASSWORD)" \
-		-var=git_repository="$(GIT_REPOSITORY)" \
-		-var=git_username="$(GIT_USERNAME)" \
-		-var=git_password="$(GIT_PASSWORD)" \
-		-var=letsencrypt_data="$(LETSENCRYPT_DATA)"
+		-var project="$(GOOGLE_PROJECT)" \
+		-var region="$(GOOGLE_REGION)" \
+		-var zone="$(GOOGLE_ZONE)" \
+		-var 'trusted_cidr=["$(subst $(COMMA),"$(COMMA)",$(TRUSTED_CIDR))"]' \
+		-var name="$(INSTANCE_NAME)" \
+		-var machine_type="$(MACHINE_TYPE)" \
+		-var domain="$(DOMAIN)" \
+		-var email="$(EMAIL)" \
+		-var tw_username="$(TW_USERNAME)" \
+		-var tw_password="$(TW_PASSWORD)" \
+		-var git_repository="$(GIT_REPOSITORY)" \
+		-var git_username="$(GIT_USERNAME)" \
+		-var git_password="$(GIT_PASSWORD)" \
+		-var letsencrypt_data="$(LETSENCRYPT_DATA)"
 
 # TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
 #       password instead of SSH key.

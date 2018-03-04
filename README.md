@@ -327,6 +327,11 @@ make[1]: Leaving directory '/usr/local/src/tiddlywiki-gce'
 * Maybe merge letsencrypt and apache images, because currently certbot has no
   way to restart Apache once a certificate is generated or renewed.
 * Improve Terraform configuration (I'm still learning Terraform).
+  * Build and deliver Docker images to Google Cloud registry using the docker
+    provider.
+  * Automatically point DNS at the GCE VM instance using the Google Cloud
+    provider with managed DNS.
+  * Automatically create a Git source repository in Google Cloud.
 * Maybe replace Apache with Nginx for better protection against slowloris?
 * Maybe merge tiddlywiki and automation images, but retain seperate containers.
 * Improve the way that `htdocs/static-a`, `htdocs/static-b` and `htdocs/static`
