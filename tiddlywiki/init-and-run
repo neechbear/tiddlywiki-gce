@@ -13,7 +13,7 @@ SYNCDST="$TWBASE/mywiki/tiddlers/\$__core_modules_syncer.js"
 cd "$TWBASE"
 
 git_bytes () {
-  du -s "$TWBASE/.git" 2>/dev/null | cut -d" " -f1
+  du -s "$TWBASE/.git" 2>/dev/null | awk '{print $1}'
 }
 
 GITBYTES="$(git_bytes)"

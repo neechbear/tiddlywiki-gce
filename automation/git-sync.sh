@@ -19,6 +19,10 @@ untracked_files () {
 
 if [ "$1" = "force" ] || dirty_workspace || untracked_files
 then
+  git branch --set-upstream-to=origin/master master
+  if ! git pull --ff-only; then
+    echo "TODO - deal with upstream conflict here"
+  fi
   git add -A
   git commit -a -m "Automatic commit."
   git push origin master
