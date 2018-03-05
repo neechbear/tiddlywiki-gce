@@ -24,4 +24,24 @@ do
   sleep 5
 done
 
-exec httpd -D FOREGROUND
+httpd -D FOREGROUND &
+apache_pid=$!
+
+ssl_certificate_changed () {
+  [ -n "$(find "/etc/letsencrypt/live/$DOMAIN/" -mmin -30)" ]
+}
+
+nudge_apache () {
+  if ssl_certificate_changed; then
+    echo "SSL certification modification detected; sending SIGUSR1 to Apache PID $apache_pid ..."
+    kill -SIGUSR1 $apache_pid
+  fi
+}
+
+sleep 90
+nudge_apache
+
+while sleep 1800
+do
+  nudge_apache
+done
