@@ -62,8 +62,9 @@ if [ -n "$GIT_REPOSITORY" ]; then
   fi
   git remote set-url origin "$GIT_REPOSITORY"
   git remote -v
-  git fetch
+  git fetch --all
   if git branch -a | grep -Ewq '(master|remotes/origin/master)$'; then
+    git reset --hard origin/master
     git checkout master
   fi
 fi

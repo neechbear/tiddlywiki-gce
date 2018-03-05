@@ -42,7 +42,7 @@ CP := cp
 SPACE := " "
 COMMA := ,
 
-.PHONY: $(TF_TARGETS) test clean check_clean help
+.PHONY: $(TF_TARGETS) $(AUTOMATION_SSH_KEY) test clean check_clean help
 
 .DEFAULT_GOAL := help
 

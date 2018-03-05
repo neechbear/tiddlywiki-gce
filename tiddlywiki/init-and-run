@@ -12,30 +12,32 @@ SYNCDST="$TWBASE/mywiki/tiddlers/\$__core_modules_syncer.js"
 
 cd "$TWBASE"
 
-for try in 1 2 3 4 5
+git_bytes () {
+  du -s "$TWBASE/.git" 2>/dev/null | cut -d" " -f1
+}
+
+GITBYTES="$(git_bytes)"
+STABLECNT=0
+while [ -z "$GITBYTES" ] \
+   || [ ! "$GITBYTES" = "$(git_bytes)" ] \
+   || [ "$STABLECNT" -lt 4 ]
 do
-  if [ -d .git ]
-  then
-    break
-  fi
+  echo "Waiting for Git repository to stabilize ..."
   sleep 5
-done
-
-for try in 1 2 3 4 5
-do
-  if [ ! -d mywiki ] ; then
-    if tiddlywiki mywiki --init server
-    then
-      break
-    fi
-    sleep 5
+  NEWGITBYTES="$(git_bytes)"
+  if [ "$GITBYTES" = "$NEWGITBYTES" ]; then
+    STABLECNT=$(( $STABLECNT + 1 ))
   fi
+  GITBYTES="$NEWGITBYTES"
 done
 
-if [ ! -e "$SYNCDST" ]
-then
-  if [ ! -d mywiki/tiddlers ]
-  then
+ls -l
+if [ ! -d mywiki ]; then
+  tiddlywiki mywiki --init server
+fi
+
+if [ ! -e "$SYNCDST" ]; then
+  if [ ! -d mywiki/tiddlers ]; then
     mkdir -p mywiki/tiddlers
   fi
   cp "$SYNCSRC" "$SYNCDST"
