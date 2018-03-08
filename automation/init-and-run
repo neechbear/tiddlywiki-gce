@@ -14,12 +14,12 @@ TWBASE="/var/lib/tiddlywiki"
 HTDOCS="$TWBASE/htdocs"
 LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
 
-for var in $(env | awk -F= '{print $1}')
-do
-	if [ -z "$(eval "echo \$$var")" ]; then
-    eval "unset $var"
-  fi
-done
+#for var in $(env | awk -F= '{print $1}')
+#do
+#	if [ -z "$(eval "echo \$$var")" ]; then
+#    eval "unset $var"
+#  fi
+#done
 
 cd "$TWBASE"
 

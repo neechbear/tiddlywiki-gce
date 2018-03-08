@@ -336,6 +336,10 @@ make[1]: Leaving directory '/usr/local/src/tiddlywiki-gce'
 * Maybe merge tiddlywiki and automation images, but retain seperate containers.
 * Improve the way that `htdocs/static-a`, `htdocs/static-b` and `htdocs/static`
   end up being persisted to Git. (Multiple copies is a little sub-optimal).
+* Maybe add refresh timer to systemd unit
+  https://gist.github.com/Luzifer/7c54c8b0b61da450d10258f0abd3c917
+  https://gist.github.com/mosquito/b23e1c1e5723a7fd9e6568e5cf91180f
+  https://www.freedesktop.org/software/systemd/man/systemd.time.html
 
 ## License
 

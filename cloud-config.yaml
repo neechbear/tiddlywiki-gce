@@ -23,9 +23,15 @@ write_files:
                                   -w "/rootfs/home/tiddlywiki/docker" \
                                   docker/compose:1.19.0 \
                                   up --build --force-recreate
-    ExecStop=/usr/bin/docker stop docker-compose
-    ExecStopPost=/usr/bin/docker rm docker-compose
-    RestartSec=5
+    ExecStop=/usr/bin/docker run  --name=docker-compose \
+                                  --rm --env-file env-file \
+                                  -v /var/run/docker.sock:/var/run/docker.sock \
+                                  -v "/home/tiddlywiki/docker:/rootfs/home/tiddlywiki/docker" \
+                                  -w "/rootfs/home/tiddlywiki/docker" \
+                                  docker/compose:1.19.0 \
+                                  down
+    ExecStopPost=/usr/bin/docker stop docker-compose
+    RestartSec=15
     Restart=always
 
 runcmd:
