@@ -31,6 +31,9 @@ LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
 # Explicit version required as no latest tag exists.
 DOCKER_COMPOSE_VER := 1.19.0
 
+# Should Terraform attempt to manage DNS records?
+MANAGE_DNS := 0
+
 # Terraform targets and providers.
 TF_AUTO_APPROVE :=
 TF_TARGETS := apply destroy plan refresh
@@ -98,7 +101,8 @@ $(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS) tf_workspace
 		-var git_repository="$(GIT_REPOSITORY)" \
 		-var git_username="$(GIT_USERNAME)" \
 		-var git_password="$(GIT_PASSWORD)" \
-		-var letsencrypt_data="$(LETSENCRYPT_DATA)"
+		-var letsencrypt_data="$(LETSENCRYPT_DATA)" \
+		-var manage_dns="$(MANAGE_DNS)"
 
 # TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
 #       password instead of SSH key.

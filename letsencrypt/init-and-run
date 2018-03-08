@@ -93,7 +93,8 @@ fi
 # Display certificate information.
 openssl x509 -in "$LIVEPATH/cert.pem" -text -noout
 
-if ! cert_is_letsencrypt; then
+if ! cert_is_letsencrypt "$LIVEPATH/cert.pem"; then
+  echo "Certificate $LIVEPATH/cert.pem is not from Let's Encrypt; gracefully exiting ..."
   exit 0
 fi
 
