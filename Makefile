@@ -38,7 +38,7 @@ MANAGE_DNS := 0
 TF_AUTO_APPROVE :=
 TF_TARGETS := apply destroy plan refresh
 TF_PROVIDERS := template google random
-TF_PLUGINS := $(addsuffix _v*, $(addprefix .terraform/plugins/*/terraform-provider-, $(TF_PLUGINS)))
+TF_PLUGINS := $(addsuffix _v*, $(addprefix .terraform/plugins/*/terraform-provider-, $(TF_PROVIERS)))
 
 AUTOMATION_SSH_KEY := $(if $(GIT_SSH_KEY),automation/id_rsa,)
 CP := cp
@@ -69,7 +69,7 @@ clean:
 	$(RM) -R $(AUTOMATION_SSH_KEY)
 
 veryclean: check_clean clean
-	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup
+	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup terraform.tfstate.d
 
 $(AUTOMATION_SSH_KEY): $(GIT_SSH_KEY)
 	$(CP) $< $@
