@@ -1,4 +1,4 @@
-*/2 * * * * /usr/local/bin/git-sync.sh
-*/5 * * * * /usr/local/bin/static-website.sh
-0 4 * * * find /var/lib/tiddlywiki -name 'Draft_of_*.tid' -delete
-1 * * * * /usr/local/bin/git-sync.sh force
+*/2  *         * * * /usr/local/bin/git-sync.sh
+*/15 *         * * * nice /usr/local/bin/static-website.sh
+7    8         * * * find /var/lib/tiddlywiki -name 'Draft_of_*.tid' -delete
+1    2,8,14,20 * * * /usr/local/bin/git-sync.sh force

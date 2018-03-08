@@ -25,7 +25,7 @@ changed_tiddlers () {
   find "$TWBASE/mywiki" \
     -name '*.tid' \
     -and -not -name '$__StoryList.*' \
-    -mmin -6
+    -mmin -16
 }
 
 urldecode () {
@@ -95,7 +95,7 @@ if [ -n "$(changed_tiddlers)" ]; then
                    "$(urldecode "$lcfile" | tr -d "_")"
     do
       if [ ! "$symlink" = "$file" ] && [ ! -e  "$symlink" ]; then
-        ln -s "$file" "$symlink"
+        ln -s "$file" "$symlink" || true
       fi
     done
   done

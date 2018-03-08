@@ -42,7 +42,7 @@ CP := cp
 SPACE := " "
 COMMA := ,
 
-.PHONY: $(TF_TARGETS) $(AUTOMATION_SSH_KEY) test clean check_clean help
+.PHONY: $(TF_TARGETS) $(AUTOMATION_SSH_KEY) test clean check_clean help tf_workspace
 
 .DEFAULT_GOAL := help
 
@@ -74,9 +74,15 @@ $(AUTOMATION_SSH_KEY): $(GIT_SSH_KEY)
 $(TF_PLUGINS):
 	terraform init
 
+terraform.tfstate.d/%:
+	terraform workspace new "$(DOMAIN)"
+
+tf_workspace: | terraform.tfstate.d/$(DOMAIN)
+	terraform workspace select "$(DOMAIN)"
+
 # TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
 #       password instead of SSH key.
-$(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS)
+$(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS) tf_workspace
 	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
 	terraform $@ $(if $(TF_AUTO_APPROVE),-auto-approve,) \
 		-var project="$(GOOGLE_PROJECT)" \
