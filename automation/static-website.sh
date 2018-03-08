@@ -81,7 +81,7 @@ if [ -n "$(changed_tiddlers)" ]; then
     ln -sfn "$(urlencode "$default").html" "index.html"
   fi
 
-  find . -mindepth 1 -maxdepth 1 -type f | while read file
+  find . -mindepth 1 -maxdepth 1 -type f | cut -b3- | while read file
   do
     lcfile="$(echo "$file" | tr "A-Z" "a-z")"
     for symlink in "$lcfile" \
