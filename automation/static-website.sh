@@ -94,6 +94,7 @@ if [ -n "$(changed_tiddlers)" ]; then
                    "$(urldecode "$file" | tr -d "_")" \
                    "$(urldecode "$lcfile" | tr -d "_")"
     do
+      symlink="$(echo "$symlink" | tr "/" "-")"
       if [ ! "$symlink" = "$file" ] && [ ! -e  "$symlink" ]; then
         ln -s "$file" "$symlink" || true
       fi
