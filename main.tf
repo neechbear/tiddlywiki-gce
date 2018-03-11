@@ -14,6 +14,7 @@ variable "git_repository" {}
 variable "git_username" {}
 variable "git_password" {}
 variable "letsencrypt_data" { default = "/home/tiddlywiki/letsencrypt" }
+variable "debug" { default = "" }
 
 locals {
   tw_password = "${var.tw_password == "" ? random_string.password.result : var.tw_password}"
@@ -37,6 +38,7 @@ data "template_file" "environment" {
     git_username     = "${var.git_username}"
     git_password     = "${var.git_password}"
     letsencrypt_data = "${var.letsencrypt_data}"
+    debug            = "${var.debug}"
   }
 }
 

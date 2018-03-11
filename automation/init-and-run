@@ -3,25 +3,24 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-set -ex
+set -e
 
 # Should we set DOMAIN to the external IP if it is not set?
 #export DOMAIN="$(curl -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip")"
 
-env
+if [ -n "$DEBUG" ]; then
+  set -x
+  env
+fi
 
 TWBASE="/var/lib/tiddlywiki"
 HTDOCS="$TWBASE/htdocs"
 LIVEPATH="/etc/letsencrypt/live/$DOMAIN"
 
-#for var in $(env | awk -F= '{print $1}')
-#do
-#	if [ -z "$(eval "echo \$$var")" ]; then
-#    eval "unset $var"
-#  fi
-#done
-
 cd "$TWBASE"
+
+date > mywiki/automation.startup
+date > letsencrypt/automation.startup
 
 if [ ! -e ~/.ssh/known_hosts ]; then
   for host in github.com gitlab.com bitbucket.org
@@ -36,6 +35,7 @@ if [ ! -d "$TWBASE/.git" ]; then
   git init
 fi
 
+echo "Configuring Git ..."
 for name in "$GIT_AUTHOR_NAME" "$GIT_COMMITTER_NAME" "$GIT_USERNAME"
 do
   if [ -n "$name" ]; then
@@ -62,6 +62,7 @@ if [ -n "$GIT_REPOSITORY" ]; then
   fi
   git remote set-url origin "$GIT_REPOSITORY"
   git remote -v
+  echo "Downloading remote Git origin repository ..."
   git fetch --all
   if git branch -a | grep -Ewq '(master|remotes/origin/master)$'; then
     git reset --hard origin/master
@@ -86,9 +87,13 @@ fi
 
 git config -l
 
+rm -f mywiki/automation.startup letsencrypt/automation.startup
+
 git add -A
 git commit -a -m "Automatic commit."
 git push origin master
+
+echo "Automation container startup completed."
 
 # Launch cron daemon to schedule Git uploads and static website generation.
 exec crond -l 6 -d 6 -f

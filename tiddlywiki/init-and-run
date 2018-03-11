@@ -3,7 +3,11 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-set -ex
+set -e
+
+if [ -n "$DEBUG" ]; then
+  set -x
+fi
 
 TWBASE="/var/lib/tiddlywiki"
 SYNCPATCH="/usr/local/src/syncer.patch"
@@ -12,30 +16,20 @@ SYNCDST="$TWBASE/mywiki/tiddlers/\$__core_modules_syncer.js"
 
 cd "$TWBASE"
 
-git_bytes () {
-  du -s "$TWBASE/.git" 2>/dev/null | awk '{print $1}'
-}
-
-GITBYTES="$(git_bytes)"
-STABLECNT=0
-while [ -z "$GITBYTES" ] \
-   || [ ! "$GITBYTES" = "$(git_bytes)" ] \
-   || [ "$STABLECNT" -lt 4 ]
+while sleep 2 && [ -e mywiki/automation.startup ]
 do
-  echo "Waiting for Git repository to stabilize ..."
-  sleep 5
-  NEWGITBYTES="$(git_bytes)"
-  if [ "$GITBYTES" = "$NEWGITBYTES" ]; then
-    STABLECNT=$(( $STABLECNT + 1 ))
-  fi
-  GITBYTES="$NEWGITBYTES"
+  echo "Waiting for automation container to finish startup ..."
+  sleep 3
 done
 
-ls -l
-if [ ! -d mywiki ]; then
-  tiddlywiki mywiki --init server
+# Create an empty TiddlyWiki if necessary.
+if [ ! -e mywiki/tiddlywiki.info ]; then
+  cd "$TWBASE/mywiki"
+  tiddlywiki . --init server
+  cd "$TWBASE"
 fi
 
+# Patch the syncer.js module to not complain on errors.
 if [ ! -e "$SYNCDST" ]; then
   if [ ! -d mywiki/tiddlers ]; then
     mkdir -p mywiki/tiddlers
@@ -44,8 +38,11 @@ if [ ! -e "$SYNCDST" ]; then
   patch "$SYNCDST" "$SYNCPATCH"
 fi
 
-env
+if [ -n "$DEBUG" ]; then
+  env
+fi
 
+# Start the NodeJS TiddlyWiki server on port 8080.
 exec tiddlywiki mywiki --server "8080" \
   '$:/core/save/all' "text/plain" "text/html" \
   "$TW_USERNAME" "" "0.0.0.0"

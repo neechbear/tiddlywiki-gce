@@ -7,16 +7,18 @@
 # SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
 # SSLCertificateChainFile /etc/letsencrypt/live/${DOMAIN}/fullchain.pem
 
-set -ex
+set -e
 
 # Should we set DOMAIN to the external IP if it is not set?
 #export DOMAIN="$(curl -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip")"
 
-env
+if [ -n "$DEBUG" ]; then
+  set -x
+  env
+fi
 
 CONFPATH="/etc/letsencrypt"
 LIVEPATH="$CONFPATH/live/$DOMAIN"
-GLUEPATH="$CONFPATH/.glue"
 HTDOCS="/usr/local/apache2/htdocs"
 
 if [ ! -d "$LIVEPATH" ]; then
@@ -25,10 +27,6 @@ fi
 
 if [ ! -d "$HTDOCS/.well-known" ]; then
   mkdir -p "$HTDOCS/.well-known"
-fi
-
-if [ ! -e "$GLUEPATH" ]; then
-  mkdir -p "$GLUEPATH"
 fi
 
 cert_is_letsencrypt () {
@@ -53,10 +51,17 @@ domain_responds () {
   return $RC
 }
 
+while sleep 2 && [ -e "$CONFPATH/automation.startup" ]
+do
+  echo "Waiting for automation container to finish startup ..."
+  sleep 3
+done
+
 # Generate a self-signed certificate until LetsEncrypt does it's thing.
 if   [ ! -e "$LIVEPATH/cert.pem" ] \
   || [ ! -e "$LIVEPATH/privkey.pem" ] \
   || [ ! -e "$LIVEPATH/fullchain.pem" ]; then
+  echo "Generating fallback self-signed certificate ..."
   openssl req \
     -subj "/CN=$DOMAIN/O=$DOMAIN/OU=$DOMAIN/L=Location/ST=State/C=GB" \
     -new -newkey rsa:4096 -days 1180 -nodes -x509 \
@@ -67,27 +72,32 @@ fi
 
 # Generate initial LetsEncrypt certificate.
 if ! cert_is_letsencrypt "$LIVEPATH/cert.pem" \
-  && domain_responds "$DOMAIN"; then
-  echo "Generate LetsEncrypt certificate here."
+  && domain_responds "$DOMAIN" \
+  && [ ! "$DOMAIN" = "localhost.localdomain" ] \
+  && [ -n "$EMAIL" ] \
+  && [ ! "$EMAIL" = "webmaster@localhost.localdomain" ]; then
+
+  echo "Generating Let's Encrypt certificate ..."
+
+  if [ -e "$LIVEPATH" ]; then
+    rm -rf "$LIVEPATH"
+  fi
+
   certbot certonly \
     --agree-tos \
     --non-interactive \
     --email "$EMAIL" \
-    --config-dir "$GLUEPATH" \
+    --config-dir "$CONFPATH" \
     --webroot \
     --webroot-path "$HTDOCS" \
     --domains "$DOMAIN"
+fi
 
-  # TODO: There is potential for a race condition here, so we should change this
-  #       to replace the old self-signed certificate in a single atomic
-  #       operation by changing a symbolic link. I think we're safe for the time
-  #       being though, because we know that Apache is already running,
-  #       otherwise certbot wouldn't have been able to finish the challenge
-  #       response by using the Apache webroot.
-  rm -Rf "$CONFPATH"/*
-  mv "$GLUEPATH"/* "$CONFPATH"
-  rm -Rf "$GLUEPATH"
-  ln -sfn "$CONFPATH" "$GLUEPATH"
+CERTPEM="$(find "$CONFPATH/live/$DOMAIN"* -name cert.pem)"
+if [ ! -e "$LIVEPATH" ] && [ -n "$CERTPEM" ]; then
+  echo "Creating symbolic link to Let's Encrypt live certificate directory ..."
+  cd "$CONFPATH/live/"
+  ln -sfn "$(basename "$(dirname "$CERTPEM")")" "$DOMAIN"
 fi
 
 # Display certificate information.

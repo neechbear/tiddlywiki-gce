@@ -3,13 +3,17 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
-set -ex
+set -e
 
 # Should we set DOMAIN to the external IP if it is not set?
 #export DOMAIN="$(curl -H "Metadata-Flavor: Google" "http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip")"
 
-env
+if [ -n "$DEBUG" ]; then
+  set -x
+  env
+fi
 
+# Create htpasswd file if necessary.
 if ! grep -qE '^[^:]:.+' /usr/local/apache2/conf/tiddlywiki.passwd 2> /dev/null \
     && [ -n "$TW_USERNAME" ] && [ "$TW_PASSWORD" ] ; then
   htpasswd -c -b -B \
@@ -18,30 +22,43 @@ if ! grep -qE '^[^:]:.+' /usr/local/apache2/conf/tiddlywiki.passwd 2> /dev/null 
     "$TW_PASSWORD"
 fi
 
+# Wait for SSL certificate to be created by letsencrypt container.
 while [ ! -e /etc/letsencrypt/live/$DOMAIN/cert.pem ]
 do
-  echo "Waiting for SSL certificate to be generated ..."
+  echo "Waiting for SSL certificate ..."
   sleep 5
 done
 
+# Launch Apache as a background process.
 httpd -D FOREGROUND &
 apache_pid=$!
 
 ssl_certificate_changed () {
-  [ -n "$(find "/etc/letsencrypt/live/$DOMAIN/" -mmin -30)" ]
+  minutes="$1"
+  if [ -z "$minutes" ]; then
+    minutes=30
+  fi
+  if [ -n "$(find "/etc/letsencrypt/live/" -mmin -$minutes)" ] \
+    && [ -e /etc/letsencrypt/live/$DOMAIN/cert.pem ]; then
+    return 0
+  fi
+  return 1
 }
 
 nudge_apache () {
-  if ssl_certificate_changed; then
+  minutes="$1"
+  if ssl_certificate_changed "$minutes"; then
     echo "SSL certification modification detected; sending SIGUSR1 to Apache PID $apache_pid ..."
     kill -SIGUSR1 $apache_pid
   fi
 }
 
-sleep 90
-nudge_apache
+# Perpetually check for any SSL certificate changes, and poke Apache to
+# gracefully reload when necessary.
+sleep 120
+nudge_apache 2
 
 while sleep 1800
 do
-  nudge_apache
+  nudge_apache 30
 done

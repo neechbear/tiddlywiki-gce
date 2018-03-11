@@ -28,6 +28,9 @@ GIT_SSH_KEY := id_rsa
 # Local bind-mount location to store Let's Encrypt certificates.
 LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
 
+# Output additional debug logging inside docker containers.
+DEBUG ?=
+
 # Explicit version required as no latest tag exists.
 DOCKER_COMPOSE_VER := 1.19.0
 
@@ -102,7 +105,8 @@ $(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS) tf_workspace
 		-var git_username="$(GIT_USERNAME)" \
 		-var git_password="$(GIT_PASSWORD)" \
 		-var letsencrypt_data="$(LETSENCRYPT_DATA)" \
-		-var manage_dns="$(MANAGE_DNS)"
+		-var manage_dns="$(MANAGE_DNS)" \
+		-var debug="$(DEBUG)"
 
 # TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
 #       password instead of SSH key.
