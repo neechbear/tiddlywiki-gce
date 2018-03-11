@@ -32,7 +32,7 @@ LETSENCRYPT_DATA := /home/tiddlywiki/letsencrypt
 DOCKER_COMPOSE_VER := 1.19.0
 
 # Should Terraform attempt to manage DNS records?
-MANAGE_DNS := 0
+MANAGE_DNS := 1
 
 # Terraform targets and providers.
 TF_AUTO_APPROVE :=

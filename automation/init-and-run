@@ -86,5 +86,9 @@ fi
 
 git config -l
 
+git add -A
+git commit -a -m "Automatic commit."
+git push origin master
+
 # Launch cron daemon to schedule Git uploads and static website generation.
 exec crond -l 6 -d 6 -f
