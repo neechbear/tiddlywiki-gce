@@ -3,29 +3,25 @@
 # MIT License
 # Copyright (c) 2018 Nicola Worthington <nicolaw@tfb.net>
 
+# https://tiddlywiki.com/static/RenderCommand.html
+# https://tiddlywiki.com/static/Generating%2520Static%2520Sites%2520with%2520TiddlyWiki.html
 # https://tiddlywiki.com/static/RenderTiddlerCommand.html
 # https://tiddlywiki.com/static/RenderTiddlersCommand.html
-# https://tiddlywiki.com/static/Generating%2520Static%2520Sites%2520with%2520TiddlyWiki.html
-# https://tiddlywiki.com/static/RenderCommand.html
 
 set -e
 
-TWBASE="/var/lib/tiddlywiki"
-HTDOCS="$TWBASE/htdocs"
-cd "$HTDOCS"
+# TODO: Due to this being a busybox ash script rather than bash, I've been
+#       somewhat lax with the use of global variables instead of passing
+#       arguments to each function. I should fix this.
 
-for dir in static-a static-b
-do
-  if [ ! -d "$HTDOCS/$dir" ]; then
-    mkdir -p "$HTDOCS/$dir"
-  fi
-done
+export TWBASE="/var/lib/tiddlywiki"
+export HTDOCS="$TWBASE/htdocs"
 
 changed_tiddlers () {
   find "$TWBASE/mywiki" \
     -name '*.tid' \
     -and -not -name '$__StoryList.*' \
-    -mmin -16
+    -mmin "-$1"
 }
 
 urldecode () {
@@ -61,19 +57,15 @@ tw () {
   { set +x; } 2>/dev/null
 }
 
-changed_tiddlers | while read -r tid
-do
-  echo "Discovered modified tiddler $tid."
-done
+generate_static_tiddlers () {
+  next_static_dir="$1"
 
-if [ -n "$(changed_tiddlers)" ]; then
-  echo "Generating static tiddlers in $HTDOCS."
-  rm -Rf "$HTDOCS/$(next_static_dir)"/*
+  rm -Rf "$HTDOCS/$next_static_dir"/*
   tw --render "[!is[system]]" "[encodeuricomponent[]addsuffix[.html]]" text/plain $:/core/templates/static.tiddler.html 
   tw --rendertiddler $:/core/templates/static.template.css static.css text/plain
   #tw --rendertiddler $:/core/templates/static.template.html index.html text/plain
 
-  cd "$HTDOCS/$(next_static_dir)"
+  cd "$HTDOCS/$next_static_dir"
 
   default="$(sed -n '/^$/{n;p}' \
     "$TWBASE/mywiki/tiddlers/\$__DefaultTiddlers.tid")"
@@ -100,7 +92,37 @@ if [ -n "$(changed_tiddlers)" ]; then
       fi
     done
   done
+}
+
+main () {
+  change_mins="$1"
+  if [[ -z "$change_mins" ]]; then
+    change_mins=30
+  fi
 
   cd "$HTDOCS"
-  ln -sfn "$(next_static_dir)" static
-fi
+
+  # TODO: See if we can work out a more tidy method of performing an atomic
+  #       update, such that does not commit two static content directories to
+  #       the upstream Git repository.
+  for dir in static-a static-b
+  do
+    if [ ! -d "$HTDOCS/$dir" ]; then
+      mkdir -p "$HTDOCS/$dir"
+    fi
+  done
+
+  changed_tiddlers "$change_mins" | while read -r tid
+  do
+    echo "Discovered modified tiddler $tid."
+  done
+
+  if [ -n "$(changed_tiddlers "$changed_mins")" ]; then
+    echo "Generating static tiddlers in $HTDOCS."
+    generate_static_tiddlers "$(next_static_dir)"
+    cd "$HTDOCS"
+    ln -sfn "$next_static_dir" static
+  fi
+}
+
+main "$@"
