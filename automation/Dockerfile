@@ -13,6 +13,7 @@ RUN chmod a+x /usr/local/bin/*
 
 COPY root.crontab /var/spool/cron/crontabs/root
 
+# TODO: Mount this as a volume from the host instead.
 COPY id_rsa /root/.ssh/id_rsa
 
 RUN mkdir -p /var/lib/tiddlywiki

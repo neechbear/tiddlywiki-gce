@@ -34,6 +34,9 @@ DEBUG ?=
 # Explicit version required as no latest tag exists.
 DOCKER_COMPOSE_VER := 1.19.0
 
+# Google container registry host.
+GOOGLE_CONTAINER_REGISTRY := gcr.io
+
 # Should Terraform attempt to manage DNS records?
 MANAGE_DNS := 1
 
@@ -48,7 +51,7 @@ CP := cp
 SPACE := " "
 COMMA := ,
 
-.PHONY: $(TF_TARGETS) $(AUTOMATION_SSH_KEY) test clean check_clean help tf_workspace
+.PHONY: $(TF_TARGETS) $(AUTOMATION_SSH_KEY) test clean check_clean help tf_workspace containers
 
 .DEFAULT_GOAL := help
 
@@ -69,7 +72,7 @@ check_clean:
 	@echo -n "Are you sure? [y/N] " && read ans && [ "$$ans" = "y" ]
 
 clean:
-	$(RM) -R $(AUTOMATION_SSH_KEY)
+	$(RM) $(AUTOMATION_SSH_KEY)
 
 veryclean: check_clean clean
 	$(RM) -R .terraform terraform.tfstate terraform.tfstate.backup terraform.tfstate.d
@@ -85,6 +88,16 @@ terraform.tfstate.d/%:
 
 tf_workspace: | terraform.tfstate.d/$(DOMAIN)
 	terraform workspace select "$(DOMAIN)"
+
+# TODO: Move this into a local-exec block inside Terraform?
+containers:
+	@:$(call check_defined, GOOGLE_PROJECT, Google Cloud project ID)
+	@:$(call check_defined, GOOGLE_CONTAINER_REGISTRY, Google Cloud container registry host)
+	for c in apache automation letsencrypt tiddlywiki ; do \
+		gcloud container builds submit \
+			--project "$(GOOGLE_PROJECT)" \
+			--tag "$(GOOGLE_CONTAINER_REGISTRY)/$(GOOGLE_PROJECT)/tw5_$$c" \
+			$$c ; done
 
 # TODO: Remove this hard pre-requisite on id_rsa in cases where we use a Git
 #       password instead of SSH key.
@@ -126,4 +139,3 @@ __check_defined = \
   $(if $(value $1),, \
     $(error Undefined $1$(if $2, ($2))$(if $(value @), \
       required by target `$@')))
-
