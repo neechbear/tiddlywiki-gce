@@ -322,6 +322,8 @@ make[1]: Leaving directory '/usr/local/src/tiddlywiki-gce'
 
 ## TODO
 
+* Prestuff `/recipes/default/tiddlers.json` and `/status` over HTTP2 connections
+  for improved client load time performance.
 * Make push of Tiddlers to Git more robust on merge conflicts.
 * Make LetsEncrypt functionality a little more robust.
 * Maybe merge letsencrypt and apache images, because currently certbot has no
