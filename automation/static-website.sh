@@ -18,10 +18,14 @@ export TWBASE="/var/lib/tiddlywiki"
 export HTDOCS="$TWBASE/htdocs"
 
 changed_tiddlers () {
+  change_mins="$1"
+  if [ -z "$change_mins" ]; then
+    change_mins=30
+  fi
   find "$TWBASE/mywiki" \
     -name '*.tid' \
     -and -not -name '$__StoryList.*' \
-    -mmin "-$1"
+    -mmin "-$change_mins"
 }
 
 urldecode () {
@@ -96,10 +100,6 @@ generate_static_tiddlers () {
 
 main () {
   change_mins="$1"
-  if [[ -z "$change_mins" ]]; then
-    change_mins=30
-  fi
-
   cd "$HTDOCS"
 
   # TODO: See if we can work out a more tidy method of performing an atomic
@@ -117,7 +117,7 @@ main () {
     echo "Discovered modified tiddler $tid."
   done
 
-  if [ -n "$(changed_tiddlers "$changed_mins")" ]; then
+  if [ -n "$(changed_tiddlers "$change_mins")" ]; then
     echo "Generating static tiddlers in $HTDOCS."
     generate_static_tiddlers "$(next_static_dir)"
     cd "$HTDOCS"
