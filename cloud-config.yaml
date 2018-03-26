@@ -6,6 +6,31 @@ users:
   homedir: /home/tiddlywiki
 
 write_files:
+- path: /etc/systemd/system/tiddlywiki-periodic-restart.timer
+  permissions: 0644
+  owner: root
+  content: |
+    [Unit]
+    Description=Periodic TiddlyWiki restart
+
+    [Timer]
+    OnCalendar=weekly
+    Persistent=true
+
+    [Install]
+    WantedBy=timers.target
+
+- path: /etc/systemd/system/tiddlywiki-periodic-restart.service
+  permissions: 0644
+  owner: root
+  content: |
+    [Unit]
+    Description=Periodic TiddlyWiki restart
+
+    [Service]
+    Type=oneshot
+    ExecStart=/usr/bin/systemctl try-restart tiddlywiki.service
+
 - path: /etc/systemd/system/tiddlywiki.service
   permissions: 0644
   owner: root
@@ -46,3 +71,5 @@ runcmd:
 - chgrp -R tiddlywiki /home/tiddlywiki
 - systemctl daemon-reload
 - systemctl start tiddlywiki.service || true
+- systemctl enable tiddlywiki-periodic-restart.service || true
+- systemctl start tiddlywiki-periodic-restart.service || true
