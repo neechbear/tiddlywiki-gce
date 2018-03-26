@@ -14,4 +14,4 @@ EXPOSE 80
 EXPOSE 443
 EXPOSE 444
 
-CMD /usr/local/bin/init-and-run
+CMD ["/bin/sh","/usr/local/bin/init-and-run"]

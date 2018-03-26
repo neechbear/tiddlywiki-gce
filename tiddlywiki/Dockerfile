@@ -12,4 +12,4 @@ RUN chmod a+x /usr/local/bin/*
 EXPOSE 8080
 WORKDIR /var/lib/tiddlywiki
 
-CMD /usr/local/bin/init-and-run
+CMD ["/bin/sh","/usr/local/bin/init-and-run"]

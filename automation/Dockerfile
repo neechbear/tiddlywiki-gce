@@ -19,4 +19,4 @@ COPY id_rsa /root/.ssh/id_rsa
 RUN mkdir -p /var/lib/tiddlywiki
 WORKDIR /var/lib/tiddlywiki
 
-CMD /usr/local/bin/init-and-run
+CMD ["/bin/sh","/usr/local/bin/init-and-run"]

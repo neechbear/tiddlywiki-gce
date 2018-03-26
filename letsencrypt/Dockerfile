@@ -9,4 +9,4 @@ RUN chmod a+x /usr/local/bin/*
 COPY root.crontab /var/spool/cron/crontabs/root
 
 ENTRYPOINT []
-CMD /usr/local/bin/init-and-run
+CMD ["/bin/sh","/usr/local/bin/init-and-run"]
