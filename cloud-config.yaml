@@ -41,6 +41,8 @@ write_files:
     [Service]
     EnvironmentFile=/home/tiddlywiki/systemd/tiddlywiki.env
     WorkingDirectory=/home/tiddlywiki/docker
+    ExecStartPre=-/usr/bin/docker stop docker-compose
+    ExecStartPre=-/usr/bin/docker rm docker-compose
     ExecStart=/usr/bin/docker run --name=docker-compose \
                                   --rm --env-file env-file \
                                   -v /var/run/docker.sock:/var/run/docker.sock \
