@@ -142,9 +142,9 @@ output "public_ip" {
 }
 
 output "url" {
-  value = "https://${google_compute_instance.tiddlywiki.network_interface.0.access_config.0.assigned_nat_ip}"
+  value = "https://${var.domain}"
 }
 
 output "rw_url" {
-  value = "https://${urlencode("${var.tw_username}")}:${urlencode("${local.tw_password}")}@${google_compute_instance.tiddlywiki.network_interface.0.access_config.0.assigned_nat_ip}:444"
+  value = "https://${urlencode("${var.tw_username}")}:${urlencode("${local.tw_password}")}@${var.domain}:444"
 }
