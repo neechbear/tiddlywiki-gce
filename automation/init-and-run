@@ -71,6 +71,7 @@ if [ -n "$GIT_REPOSITORY" ]; then
 fi
 
 echo '**/$__StoryList.tid' > .gitignore
+echo '**/StoryList.tid'   >> .gitignore
 
 MYSIG="$(</dev/urandom tr -dc A-Za-z0-9-_ | head -c 16)"
 if [ ! -d "$HTDOCS/.well-known" ]; then
