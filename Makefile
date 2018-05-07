@@ -8,7 +8,7 @@ GOOGLE_ZONE ?= $(GOOGLE_REGION)-d
 
 # Defaults provided by Terraform.
 INSTANCE_NAME :=
-MACHINE_TYPE := f1-micro
+MACHINE_TYPE := g1-small
 TRUSTED_CIDR := 0.0.0.0/0
 
 # Apache & Let's Encrypt certificate generation.
