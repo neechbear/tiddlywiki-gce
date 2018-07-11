@@ -87,6 +87,7 @@ services:
       DOMAIN: "${DOMAIN:-localhost.localdomain}"
       TW_USERNAME: "${TW_USERNAME:-anonymous}"
       TW_PASSWORD: "${TW_PASSWORD:-password}"
+      TW_PRIVATE: "${TW_PRIVATE:-}"
     depends_on:
       - tiddlywiki
       - letsencrypt

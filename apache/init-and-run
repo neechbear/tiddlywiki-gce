@@ -29,8 +29,17 @@ do
   sleep 5
 done
 
+# Define if we should force a password even for read-only access.
+if     [ -n "$TW_PRIVATE" ] \
+  && ! [ "$TW_PRIVATE" = "0" ] \
+  && ! [ "$TW_PRIVATE" = "false" ] ; then
+  TW_PRIVATE="-DPrivate"
+else
+  TW_PRIVATE=""
+fi
+
 # Launch Apache as a background process.
-httpd -D FOREGROUND &
+httpd ${TW_PRIVATE} -D FOREGROUND &
 apache_pid=$!
 
 ssl_certificate_changed () {

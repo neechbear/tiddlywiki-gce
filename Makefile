@@ -18,6 +18,7 @@ EMAIL :=
 # Password protection for TiddlyWiki write access.
 TW_USERNAME := anonymous
 TW_PASSWORD :=
+TW_PRIVATE :=
 
 # Upstream repliaction of TiddlyWiki data.
 GIT_REPOSITORY :=
@@ -114,6 +115,7 @@ $(TF_TARGETS): $(AUTOMATION_SSH_KEY) $(TF_PLUGINS) tf_workspace
 		-var email="$(EMAIL)" \
 		-var tw_username="$(TW_USERNAME)" \
 		-var tw_password="$(TW_PASSWORD)" \
+		-var tw_private="$(TW_PRIVATE)" \
 		-var git_repository="$(GIT_REPOSITORY)" \
 		-var git_username="$(GIT_USERNAME)" \
 		-var git_password="$(GIT_PASSWORD)" \

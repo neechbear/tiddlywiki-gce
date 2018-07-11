@@ -10,6 +10,7 @@ variable "domain" {}
 variable "email" {}
 variable "tw_username" { default = "anonymous" }
 variable "tw_password" { default = "" }
+variable "tw_private" { default = "" }
 variable "git_repository" {}
 variable "git_username" {}
 variable "git_password" {}
@@ -34,6 +35,7 @@ data "template_file" "environment" {
     email            = "${var.email}"
     tw_username      = "${var.tw_username}"
     tw_password      = "${local.tw_password}"
+    tw_private       = "${var.tw_private}"
     git_repository   = "${var.git_repository}"
     git_username     = "${var.git_username}"
     git_password     = "${var.git_password}"
