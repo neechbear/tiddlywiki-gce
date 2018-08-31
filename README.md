@@ -11,6 +11,17 @@ related notes on Google Cloud Platform.
 
 ## Quickstart
 
+Ensure that you have suitable credentials available for Terraform to interact
+with Google Cloud Platform. You should have one of the following environment
+variables set `GOOGLE_CREDENTIALS`, `GOOGLE_CLOUD_KEYFILE_JSON`,
+`GCLOUD_KEYFILE_JSON`, or you should make your identity available as the
+application default by running the following command:
+
+    gcloud auth application-default login
+
+See https://www.terraform.io/docs/providers/google/index.html for more
+information about authenticating with this provider.
+
 Deploy directly to GCE instance using Terraform:
 
 ```bash

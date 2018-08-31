@@ -8,3 +8,4 @@ id_*
 *.swp
 *.key
 *secret*
+*credentials*
