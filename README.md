@@ -18,6 +18,8 @@ variables set `GOOGLE_CREDENTIALS`, `GOOGLE_CLOUD_KEYFILE_JSON`,
 application default by running the following command:
 
     gcloud auth application-default login
+    gcloud auth login
+    gcloud compute config-ssh
 
 See https://www.terraform.io/docs/providers/google/index.html for more
 information about authenticating with this provider.
@@ -356,6 +358,12 @@ make[1]: Leaving directory '/usr/local/src/tiddlywiki-gce'
 * Tidy up the shell scripts in the containers. They're *nasty*. I was being
   sloppy because they're using busybox ash instead of bash,.. but that's no
   excuse!
+
+## Links
+
+* https://cloud.google.com/sdk/docs/downloads-apt-get
+* https://cloud.google.com/sdk/docs/initializing
+* https://cloud.google.com/sdk/gcloud/reference/compute/config-ssh
 
 ## License
 

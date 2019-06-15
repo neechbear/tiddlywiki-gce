@@ -9,3 +9,4 @@ id_*
 *.key
 *secret*
 *credentials*
+*.zip
