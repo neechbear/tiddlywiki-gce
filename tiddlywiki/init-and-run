@@ -43,6 +43,17 @@ if [ -n "$DEBUG" ]; then
 fi
 
 # Start the NodeJS TiddlyWiki server on port 8080.
-exec tiddlywiki mywiki --server "8080" \
-  '$:/core/save/all' "text/plain" "text/html" \
-  "$TW_USERNAME" "" "0.0.0.0"
+# Legacy: https://tiddlywiki.com/static/ServerCommand.html
+# Current: https://tiddlywiki.com/static/WebServer.html
+exec tiddlywiki mywiki \
+  --listen \
+    "port=8080" \
+    'root-tiddler=$:/core/save/all' \
+    "root-render-type=text/plain" \
+    "tiddler-render-type=text/html" \
+    "anon-username=anonymous" \
+    "authenticated-user-header=x-remote-user" \
+    "host=0.0.0.0" \
+    "readers=(anon)" \
+    "writers=$TW_USERNAME,(authenticated)" \
+    "debug-level=full"
